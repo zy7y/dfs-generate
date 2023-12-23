@@ -1,0 +1,1 @@
+#root,html,body{width:100vw;height:100vh}#app{padding:20px}.project{display:flex;align-items:center;justify-content:center}.logo{height:100px;width:auto}.left{margin:0 20px;font-size:30px;cursor:pointer}.editor-wrapper{position:relative}.copy-icon{position:absolute;top:0px;right:10px;z-index:1;color:#1677ff;font-size:16px}
