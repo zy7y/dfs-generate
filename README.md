@@ -54,7 +54,3 @@ python main.py
 ```shell
 http://127.0.0.1:80
 ```
-
-[//]: # (git remote add origin https://github.com/zy7y/dfs-generate.git
-[//]: # (git branch -M master
-[//]: # (git push -u origin master)
