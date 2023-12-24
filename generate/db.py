@@ -1,5 +1,5 @@
 template = """
-from sqlmodel import create_engine, MetaData
+from sqlmodel import create_engine
 
 db_uri = "{db_uri}"
 

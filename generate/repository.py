@@ -1,5 +1,5 @@
 imports = {
-    "from typing import Generic, List, Optional",
+    "from typing import List, Optional",
     "from sqlmodel import Session, SQLModel,select",
 }
 
