@@ -15,7 +15,7 @@ def docs():
     )
 
 
-app.include_router({table_name}router)
+app.include_router({table_name}_router)
 
 if __name__ == '__main__':
     import uvicorn
