@@ -5,9 +5,39 @@ from generate import repository
 
 
 class GenerateSQLModel:
-    template = """{imports}\n\n
-class {table_name}DO(SQLModel):\n{fields}\n\n
-class {table_name}({table_name}DO, table=True):\n{primary_key_field}
+    template = """
+{imports}
+from typing import Generic, TypeVar, List, Optional
+from pydantic import BaseModel
+from pydantic.alias_generators import to_camel
+T = TypeVar('T')
+class Result(BaseModel, Generic[T]):
+    success: bool = Field(..., description="是否成功")
+    message: str = Field(..., description="额外消息")
+    data: Optional[T] = Field(None, description="响应数据")
+
+    @classmethod
+    def ok(cls, data: T, message: str="成功"):
+        return cls(data=data, message=message, success=True)
+
+    @classmethod
+    def error(cls, message: str = "失败"):
+        return cls(data=None, message=message, success=False)
+
+class PageResult(Result[T]):
+    total: int = Field(0, description="数据总数")
+    data: List[T] = Field(default_factory=list, description="响应数据")
+
+    @classmethod
+    def ok(cls, data: List[T], total: int, message: str = "成功"):
+        return cls(data=data, total=total, message=message, success=True)
+
+class {table_name}DTO(SQLModel):\n{fields}\n    {model_config}
+class {table_name}Query(SQLModel):
+    page_number: int = Field(1, description="页码")
+    page_size: int = Field(10, description="页量")
+    {model_config}
+class {table_name}({table_name}DTO, table=True):\n{primary_key_field}
     """
 
     def __init__(self, has_column_detail=True):
@@ -109,8 +139,8 @@ class {table_name}({table_name}DO, table=True):\n{primary_key_field}
         self.imports.add("from pydantic.alias_generators import to_camel")
         self.imports.add("from sqlmodel import SQLModel, Field")
         return (
-            self.code_indentation
-            + 'model_config = {"alias_generator": to_camel, "populate_by_name": True}'
+                self.code_indentation
+                + 'model_config = {"alias_generator": to_camel, "populate_by_name": True}'
         )
 
     def do_field_str(self, table: Table, primary_key_field):
@@ -144,7 +174,8 @@ class {table_name}({table_name}DO, table=True):\n{primary_key_field}
                 kwargs["primary_key_field"] = self.do_field_str(table, field)
             else:
                 kwargs["fields"] += f"{field}\n"
-        kwargs["fields"] += self._model_config_field
         kwargs["imports"] = "\n".join(import_str for import_str in self.imports)
+        kwargs["model_config"] = 'model_config = {"alias_generator": to_camel, "populate_by_name": True}'
+
 
         return self.template.format(**kwargs)
