@@ -36,7 +36,7 @@ class {table_name}Query(SQLModel):
     page_number: int = Field(1, description="页码")
     page_size: int = Field(10, description="页量")
     {model_config}
-    
+
 
 class {table_name}({table_name}DTO, table=True):\n{primary_key_field}\n
     @classmethod
@@ -53,7 +53,7 @@ class {table_name}({table_name}DTO, table=True):\n{primary_key_field}\n
 
     @classmethod
     def update(cls, session: Session, id: int, obj_in: {table_name}DTO) -> Optional["{table_name}"]:
-        obj = cls.get_by_id(session, id)
+        obj = cls.query_by_id(session, id)
         if obj:
             for field, value in obj_in.dict(exclude_unset=True).items():
                 setattr(obj, field, value)
@@ -69,7 +69,7 @@ class {table_name}({table_name}DTO, table=True):\n{primary_key_field}\n
             session.delete(obj)
             session.commit()
         return obj
-    
+
     @classmethod
     def count(cls, session: Session, **kwargs) -> int:
         return session.scalar(
