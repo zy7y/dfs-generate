@@ -1,13 +1,12 @@
 from pydantic.alias_generators import to_pascal
 from sqlmodel import DATETIME, Column, Table
 
-from generate import repository
-
 
 class GenerateSQLModel:
     template = """
 {imports}
 from typing import Generic, TypeVar, List, Optional
+from sqlmodel import Session, SQLModel,select, func, Field
 from pydantic import BaseModel
 from pydantic.alias_generators import to_camel
 T = TypeVar('T')
@@ -37,7 +36,51 @@ class {table_name}Query(SQLModel):
     page_number: int = Field(1, description="页码")
     page_size: int = Field(10, description="页量")
     {model_config}
-class {table_name}({table_name}DTO, table=True):\n{primary_key_field}
+    
+
+class {table_name}({table_name}DTO, table=True):\n{primary_key_field}\n
+    @classmethod
+    def create(cls, session: Session, obj_in: {table_name}DTO) -> "{table_name}":
+        obj = cls(**obj_in.dict())
+        session.add(obj)
+        session.commit()
+        session.refresh(obj)
+        return obj
+
+    @classmethod
+    def query_by_id(cls, session: Session, id: int) -> Optional["{table_name}"]:
+        return session.get(cls, id)
+
+    @classmethod
+    def update(cls, session: Session, id: int, obj_in: {table_name}DTO) -> Optional["{table_name}"]:
+        obj = cls.get_by_id(session, id)
+        if obj:
+            for field, value in obj_in.dict(exclude_unset=True).items():
+                setattr(obj, field, value)
+            session.add(obj)
+            session.commit()
+            session.refresh(obj)
+        return obj
+
+    @classmethod
+    def delete_by_id(cls, session: Session, id: int) -> Optional["{table_name}"]:
+        obj = session.get(cls, id)
+        if obj:
+            session.delete(obj)
+            session.commit()
+        return obj
+    
+    @classmethod
+    def count(cls, session: Session, **kwargs) -> int:
+        return session.scalar(
+  select(func.count()).
+  select_from({table_name}).filter_by(**kwargs)
+)
+
+    @classmethod
+    def query_all_by_limit(cls, session: Session, page_number: int, page_size: int, **kwargs) -> List["{table_name}"]:        
+        stmt = select(cls).filter_by(**kwargs).offset((page_number - 1) * page_size).limit(page_size)
+        return session.exec(stmt).all()
     """
 
     def __init__(self, has_column_detail=True):
@@ -149,13 +192,8 @@ class {table_name}({table_name}DTO, table=True):\n{primary_key_field}
             f'{self.code_indentation}"""{table.comment or table.description}"""',
             f'{self.code_indentation}__tablename__ = "{table.name}"',
             primary_key_field,
-            self.repository(table.name),
         ]
         return "".join(el + "\n" for el in text)
-
-    def repository(self, table_name):
-        self.imports.update(repository.imports)
-        return repository.template.format(**{"table_name": to_pascal(table_name)})
 
     def render(self, table: Table):
         """生成model code"""
@@ -176,6 +214,5 @@ class {table_name}({table_name}DTO, table=True):\n{primary_key_field}
                 kwargs["fields"] += f"{field}\n"
         kwargs["imports"] = "\n".join(import_str for import_str in self.imports)
         kwargs["model_config"] = 'model_config = {"alias_generator": to_camel, "populate_by_name": True}'
-
 
         return self.template.format(**kwargs)
