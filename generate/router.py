@@ -16,8 +16,8 @@ def query_{table_name}_by_id(id: int) -> Result[{pascal_name}]:
 @{table_name}_router.get("", summary="分页条件查询")
 def query_{table_name}_all_by_limit(query: {pascal_name}Query = Depends()) -> PageResult[{pascal_name}]:
     with Session(engine) as session:
-        total = {pascal_name}.count(session)
-        data = {pascal_name}.query_all_by_limit(session, **query.model_dump(exclude_unset=True))
+        total = {pascal_name}.count(session, **query.count_kwargs(exclude_none=True))
+        data = {pascal_name}.query_all_by_limit(session, **query.model_dump(exclude_none=True))
         return PageResult.ok(data=data, total=total)
 
 
@@ -42,8 +42,6 @@ def delete_{table_name}_by_id(id: int) -> Result[{pascal_name}]:
 
 def render(table_name):
     router_code = template.format(
-        table_name=table_name,
-        pascal_name=to_pascal(table_name),
-        id="{id}"
+        table_name=table_name, pascal_name=to_pascal(table_name), id="{id}"
     )
     return router_code

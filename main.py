@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from db import Conf, get_db_uri, get_metadata_by_db_uri
-from generate import GenerateSQLModel, db_code_render, main_render, router_render
+from generate import GenerateEntity, db_code_render, main_render, router_render
 from schemas import ChangeDB, CodeGen, R, TableVO
 
 app = FastAPI(
@@ -65,7 +65,7 @@ def get_codegen_by_table_name(
         table = request.app.state.metadata.tables[table_name]
         uri = request.app.state.uri
         data = [
-            {"name": "model.py", "code": GenerateSQLModel().render(table)},
+            {"name": "model.py", "code": GenerateEntity(table).render()},
             {"name": "router.py", "code": router_render(table_name)},
             {"name": "main.py", "code": main_render(table_name)},
             {"name": "db.py", "code": db_code_render(uri)},
