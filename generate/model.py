@@ -1,8 +1,10 @@
+from typing import Any, Dict, Sequence
+
 from pydantic.alias_generators import to_pascal
 from sqlmodel import DATETIME, Column, Table
 
 
-class GenerateSQLModel:
+class GenerateEntity:
     template = """
 {imports}
 from typing import Generic, TypeVar, List, Optional
@@ -31,14 +33,21 @@ class PageResult(Result[T]):
     def ok(cls, data: List[T], total: int, message: str = "成功"):
         return cls(data=data, total=total, message=message, success=True)
 
-class {table_name}DTO(SQLModel):\n{fields}\n    {model_config}
-class {table_name}Query(SQLModel):
+class {table_name}DTO(SQLModel):
+{dto_fields}
+class {table_name}Query({table_name}DTO):
     page_number: int = Field(1, description="页码")
     page_size: int = Field(10, description="页量")
-    {model_config}
+{query_fields}
+    
+    def count_kwargs(self, **kwargs):
+        default_exclude = {default_exclude}
+        if v := kwargs.get("exclude"):
+            default_exclude.union(v)
+        data = self.model_dump(exclude=default_exclude, **kwargs)
+        return data
 
-
-class {table_name}({table_name}DTO, table=True):\n{primary_key_field}\n
+class {table_name}({table_name}DTO, table=True):\n{do_fields}\n
     @classmethod
     def create(cls, session: Session, obj_in: {table_name}DTO) -> "{table_name}":
         obj = cls(**obj_in.dict())
@@ -83,10 +92,13 @@ class {table_name}({table_name}DTO, table=True):\n{primary_key_field}\n
         return session.exec(stmt).all()
     """
 
-    def __init__(self, has_column_detail=True):
+    def __init__(self, table: Table):
+        self.table = table
+        self.do_fields = []
+        self.dto_fields = []
+        self.query_fields = []
         self.imports = set()
-        self.code_indentation = " " * 4
-        self.has_column_detail = has_column_detail
+        self.indent = " " * 4
 
     def _column_type_parse(self, column: Column):
         """
@@ -132,8 +144,7 @@ class {table_name}({table_name}DTO, table=True):\n{primary_key_field}\n
             else:
                 return {"default": text}
 
-    def field_details(self, column: Column) -> str:
-        """Field repr"""
+    def field_all_attrs(self, column: Column) -> dict:
         kwargs = {"default": None, **self._column_type_parse(column)}
 
         # 是否可以为空
@@ -167,52 +178,97 @@ class {table_name}({table_name}DTO, table=True):\n{primary_key_field}\n
 
         if "sa_column" in kwargs:
             kwargs.pop("nullable")
-        return " = Field(" + ", ".join(f"{k}={v}" for k, v in kwargs.items()) + ")"
+        return kwargs
 
-    def _sqlmodel_filed(self, column: Column) -> str:
-        _info = (
-            f"{self.code_indentation}{column.name}: {column.type.python_type.__name__}"
+    def get_field_repr(
+        self, field_name: str, field_type: str, field_attrs: Dict[str, Any]
+    ) -> str:
+        """字段信息
+        https://sqlmodel.tiangolo.com/tutorial/create-db-and-table/?h=optional#optional-fields-nullable-columns
+        :param field_name: 字段名称
+        :param field_type: 字段类型
+        :param field_attrs: 字段其他属性
+        return name: str = Field(..., max_length=22)
+        """
+        if (
+            "func.now" not in field_attrs.get("sa_column", "")
+            and field_attrs.get("default", "") is None
+        ):
+            field_type = f"Optional[{field_type}]"
+
+        head = f"{field_name}:{field_type}=Field("
+        tail = ",".join(f"{k}={v}" for k, v in field_attrs.items()) + ")"
+        return head + tail
+
+    def get_optional_field_repr(
+        self, field_name: str, field_type: str, field_attrs: Dict[str, Any]
+    ) -> str:
+        if field_attrs.get("default") is None:
+            field_type = f"Optional[{field_type}]"
+
+        head = f"{field_name}:{field_type}=Field("
+        tail = ",".join(f"{k}={v}" for k, v in field_attrs.items()) + ")"
+        return head + tail
+
+    def _add_query_field(
+        self, filed_name: str, field_type: str, kwargs: Dict[str, Any]
+    ):
+        _qf_kwargs = {"default": None}
+        for k, v in kwargs.items():
+            if k in ["max_length", "max_digits", "decimal_places", "description"]:
+                _qf_kwargs[k] = v
+        self.query_fields.append(
+            self.get_optional_field_repr(filed_name, field_type, _qf_kwargs)
         )
-        if self.has_column_detail:
-            _info += self.field_details(column)
-        return _info
 
-    @property
-    def _model_config_field(self):
+    def add_field_by_column(self, column: Column):
+        field_name = column.name
+        field_type = column.type.python_type.__name__
+        field_attrs = self.field_all_attrs(column)
+        field_repr = self.get_field_repr(field_name, field_type, field_attrs)
+        if column.primary_key:
+            self.do_fields.append(field_repr)
+        else:
+            self.dto_fields.append(field_repr)
+            if (
+                not column.nullable
+                or "datetime.utcnow" in field_repr
+                or "func.now" in field_repr
+            ):
+                self._add_query_field(field_name, field_type, field_attrs)
+
+    def add_dto_head_field(self):
+        do_annotation = f'"""{self.table.comment or self.table.description}"""'
+        do_metadata = f'__tablename__ = "{self.table.name}"'
+        self.do_fields.append(do_annotation)
+        self.do_fields.append(do_metadata)
+
+    def add_do_tail_field(self):
         self.imports.add("from pydantic.alias_generators import to_camel")
         self.imports.add("from sqlmodel import SQLModel, Field")
-        return (
-                self.code_indentation
-                + 'model_config = {"alias_generator": to_camel, "populate_by_name": True}'
+        self.dto_fields.append(
+            'model_config = {"alias_generator": to_camel, "populate_by_name": True}'
         )
 
-    def do_field_str(self, table: Table, primary_key_field):
-        """do 数据库模型 展示字段"""
-        text = [
-            f'{self.code_indentation}"""{table.comment or table.description}"""',
-            f'{self.code_indentation}__tablename__ = "{table.name}"',
-            primary_key_field,
-        ]
-        return "".join(el + "\n" for el in text)
+    def render_fields_str(self, fields: Sequence[str], use_indent=True) -> str:
+        if use_indent:
+            return "\n".join(self.indent + field for field in fields)
+        else:
+            return "\n".join(field for field in fields)
 
-    def render(self, table: Table):
+    def render(self) -> str:
         """生成model code"""
-        table_name = to_pascal(table.name)
+        self.add_dto_head_field()
+        for column in self.table.columns:
+            self.add_field_by_column(column)
+        self.add_do_tail_field()
         kwargs = {
-            "table_name": table_name,
-            "primary_key_field": "",
-            "fields": "",
-            "imports": "",
+            "table_name": to_pascal(self.table.name),
+            "imports": self.render_fields_str(self.imports, use_indent=False),
+            "dto_fields": self.render_fields_str(self.dto_fields),
+            "do_fields": self.render_fields_str(self.do_fields),
+            "query_fields": self.render_fields_str(self.query_fields),
+            "default_exclude": "{'page_number', 'page_size'}",
         }
-
-        for column in table.columns:
-            field = self._sqlmodel_filed(column)
-
-            if column.primary_key:
-                kwargs["primary_key_field"] = self.do_field_str(table, field)
-            else:
-                kwargs["fields"] += f"{field}\n"
-        kwargs["imports"] = "\n".join(import_str for import_str in self.imports)
-        kwargs["model_config"] = 'model_config = {"alias_generator": to_camel, "populate_by_name": True}'
 
         return self.template.format(**kwargs)
