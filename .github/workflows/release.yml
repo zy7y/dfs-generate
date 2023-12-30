@@ -54,7 +54,7 @@ jobs:
         with:
           # 获取变量
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./dist/main.exe
+          asset_path: ./dist/client.exe
           asset_name: dfs-generate.exe
           asset_content_type: application/octet-stream
 
@@ -83,6 +83,6 @@ jobs:
         with:
           # 获取变量
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./dist/main.app
+          asset_path: ./dist/client.app
           asset_name: dfs-generate.app
           asset_content_type: application/octet-stream
