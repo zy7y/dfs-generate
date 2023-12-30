@@ -1,4 +1,4 @@
-name: lint check
+name: pip install check
 
 on:
   push:
@@ -20,8 +20,4 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pylint
-      - name: Analysing the code with pylint
-        run: |
-          pylint $(git ls-files '*.py')
+          pip install -r requirements.txt
