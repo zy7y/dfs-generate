@@ -41,9 +41,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          pip install pywebview
+          pip install pyinstaller
       - name: Build executable
         run: |
-          pyinstaller --windowed --onefile main.py
+          pyinstaller --windowed --onefile client.py
 
       - name: Upload executables
         uses: actions/upload-release-asset@v1
@@ -54,4 +56,33 @@ jobs:
           upload_url: ${{ needs.release.outputs.upload_url }}
           asset_path: ./dist/main.exe
           asset_name: dfs-generate.exe
+          asset_content_type: application/octet-stream
+
+  build-macos-app:
+    needs: release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pywebview
+          pip install pyinstaller
+      - name: Build executable
+        run: |
+          pyinstaller --windowed --onefile client.py
+
+      - name: Upload executables
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          # 获取变量
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ./dist/main.app
+          asset_name: dfs-generate.app
           asset_content_type: application/octet-stream
