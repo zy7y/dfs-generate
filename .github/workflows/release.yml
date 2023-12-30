@@ -1,0 +1,57 @@
+name: release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+
+  # 创建发布
+  release:
+    runs-on: ubuntu-latest
+    # 输出变量
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+
+  # 打包上传
+  build-windows-app:
+    needs: release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Build executable
+        run: |
+          pyinstaller --windowed --onefile main.py
+
+      - name: Upload executables
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          # 获取变量
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ./dist/main.exe
+          asset_name: dfs-generate.exe
+          asset_content_type: application/octet-stream
