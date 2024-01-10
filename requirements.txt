@@ -2,5 +2,5 @@ fastapi==0.105.0
 sqlmodel==0.0.14
 PyMySQL==1.1.0
 isort==5.13.2
-black==23.12.1
 uvicorn==0.24.0.post1
+yapf==0.40.2
