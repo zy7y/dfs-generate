@@ -48,7 +48,7 @@ pip install -r requirements.txt -i  https://mirrors.aliyun.com/pypi/simple/
 ```
 3. 启动项目
 ```shell
-python main.py
+uvicorn main:app --port 80
 ```
 4. 浏览器访问
 ```shell

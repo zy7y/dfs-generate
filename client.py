@@ -1,10 +1,12 @@
-import subprocess
-import time
+import threading
 
+import uvicorn
 import webview
 
 import socket
 import random
+
+from main import app
 
 
 def get_unused_port():
@@ -22,11 +24,11 @@ def get_unused_port():
 
 def desktop_client():
     port = get_unused_port()
-    p = subprocess.Popen(f"uvicorn main:app --port {port}", shell=True)
+    t = threading.Thread(target=uvicorn.run, args=(app,), kwargs={"port": port})
+    t.daemon = True
+    t.start()
     webview.create_window("DFS代码生成", url=f"http://127.0.0.1:{port}")
-    time.sleep(1)
     webview.start(debug=True)
-    p.kill()
 
 
 if __name__ == '__main__':

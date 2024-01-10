@@ -61,9 +61,3 @@ def change_db(conf: DBConf):
     except Exception as e:
         print(e)
     return R.error(msg="请确认信息是否填写正确")
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run("main:app", reload=True, port=80)
