@@ -1,21 +1,28 @@
+import os
+
 from fastapi import FastAPI, Query
 from fastapi.requests import Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+import pkg_resources
+
 
 from entity import CodeGen, Conf, DBConf, R, RList, Table
 from generate.main import generate_code
 
-app = FastAPI(
-    title="dfs-generate", description="FastAPI SQLModel 逆向生成代码", docs_url=None
-)
+app = FastAPI(title="dfs-generate", description="FastAPI SQLModel 逆向生成代码")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 解决打包桌面程序static找不到
+static_path = pkg_resources.resource_filename(__name__, "static")
+
+
+app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 
 @app.get("/", include_in_schema=False)
 def index():
-    return FileResponse("static/index.html")
+    return FileResponse(os.path.join(static_path, "index.html"))
 
 
 @app.get("/tables", response_model=RList[Table])

@@ -15,7 +15,7 @@ def get_unused_port():
         port = random.randint(1024, 65535)  # 端口范围一般为1024-65535
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            sock.bind(('localhost', port))
+            sock.bind(("localhost", port))
             sock.close()
             return port
         except OSError:
@@ -31,5 +31,5 @@ def desktop_client():
     webview.start(debug=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     desktop_client()

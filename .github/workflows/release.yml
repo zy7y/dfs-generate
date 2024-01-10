@@ -74,7 +74,7 @@ jobs:
           pip install pyinstaller
       - name: Build executable
         run: |
-          pyinstaller --windowed --onefile client.py
+          python build.py
 
       - name: Upload executables
         uses: actions/upload-release-asset@v1

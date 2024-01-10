@@ -1,7 +1,7 @@
 import uuid
 from typing import Generic, List, Optional, TypeVar
 
-import black
+from yapf.yapflib.yapf_api import FormatCode
 import isort
 from pydantic import BaseModel, ConfigDict, field_serializer
 from pydantic.alias_generators import to_camel
@@ -47,6 +47,9 @@ class Conf(SQLModel, table=True):
     def get_last_uri_with_metadata(cls):
         uri = cls.get_db_uri_last_new()
         return uri, get_metadata_by_db_uri(uri)
+
+
+SQLModel.metadata.create_all(engine)
 
 
 T = TypeVar("T")
@@ -100,5 +103,5 @@ class CodeGen(BaseVo):
 
     @field_serializer("code")
     def serialize_code(self, code: str, _info):
-        _code = black.format_str(code, mode=black.FileMode())
+        _code = FormatCode(code, style_config="pep8")[0]
         return isort.code(_code)
