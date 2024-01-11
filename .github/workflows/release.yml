@@ -43,6 +43,7 @@ jobs:
           pip install -r requirements.txt
           pip install pywebview
           pip install pyinstaller
+          pip install pillow
       - name: Build executable
         run: |
           python build.py
@@ -72,6 +73,7 @@ jobs:
           pip install -r requirements.txt
           pip install pywebview
           pip install pyinstaller
+          pip install pillow
       - name: Build executable
         run: |
           python build.py
@@ -101,6 +103,7 @@ jobs:
           pip install -r requirements.txt
           pip install pywebview
           pip install pyinstaller
+          pip install pillow
       - name: Build executable
         run: |
           python build.py
