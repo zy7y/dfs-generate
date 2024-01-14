@@ -27,6 +27,7 @@
 ![router_code](image/router_code.png)
 ![db_code](image/db_code.png)
 # 使用项目
+> 桌面端请在Release处下载
 > 项目本身语言版本 `Python3.8`
 1. 拉取本项目
 ```shell
