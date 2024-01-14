@@ -34,44 +34,17 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.10
+      - name: Set up Python 3.11
         uses: actions/setup-python@v3
         with:
-          python-version: "3.10"
+          python-version: "3.11"
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
           pip install pywebview
           pip install pyinstaller
-      - name: Build executable
-        run: |
-          pyinstaller --windowed --onefile client.py
+          pip install pillow
 
-      - name: Upload executables
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        with:
-          # 获取变量
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./dist/client.exe
-          asset_name: dfs-generate.exe
-          asset_content_type: application/octet-stream
-
-  build-macos-app:
-    needs: release
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.10"
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pywebview
-          pip install pyinstaller
       - name: Build executable
         run: |
           python build.py
@@ -83,6 +56,47 @@ jobs:
         with:
           # 获取变量
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./dist/client.app
-          asset_name: dfs-generate.app
+          asset_path: ./dist/client.exe
+          asset_name: client.exe
+          asset_content_type: application/octet-stream
+
+  build-macos-linux:
+    needs: release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # ubuntu macos 打包
+        os: [ ubuntu-latest, macos-latest ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pywebview
+          pip install pyinstaller
+          pip install pillow
+
+      - name: Build executable
+        run: |
+          pyinstaller -w -F --add-data static:static client.py
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            zip -r -X client-macos.zip ./dist/client.app
+          fi
+
+      - name: Upload executables
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          # 获取变量
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: |
+            ${{ matrix.os == 'macos-latest' && './client-macos.zip' || './dist/client' }}
+          asset_name: |
+            ${{ matrix.os == 'macos-latest' && 'client-macos.zip' || 'client-linux' }}
           asset_content_type: application/octet-stream

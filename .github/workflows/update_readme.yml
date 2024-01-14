@@ -1,0 +1,34 @@
+name: Update README
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.Token }}
+      REPO_NAME: ${{ github.repository }}
+      README_PATH: ${{ github.workspace }}/README.md
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.11"
+
+      - name: Set Git Config
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor_email }}"
+
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Update README
+        run: |
+          python .github/workflows/update_readme.py 
+
