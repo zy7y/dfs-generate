@@ -16,12 +16,6 @@
 3. [fastapi-crudrouter](https://fastapi-crudrouter.awtkns.com/) 内部通过add_router方式注册路由，虽然代码减少了，但是灵活性变低了
 4. 或该更多的使用表之间[逻辑关联](https://www.zhihu.com/question/20006142)
 
-# 亮点
-> 几乎没有亮点、代码质量也差
-1. 项目本身Web服务、和生成的代码均使用 `Pydantic 2.x` 的`FastAPI`, `SQLModel` 版本
-2. 将持续维护，欢迎一起加入。
-3. 目前生成的代码非`async`，仅支持`MySQL` DB, 生成的代码分层不够清晰(还没抄到好的)，项目本身代码质量差（全是字符串format），生成的SQLModel 表模型部分类型待完善
-
 # 上图
 ![home](image/home.png)
 ![conf](image/conf.png)
