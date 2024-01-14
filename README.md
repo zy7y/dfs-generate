@@ -5,6 +5,8 @@
 - d -> db 数据库
 - f -> fastapi + uvicorn 接口服务
 - s -> sqlmodel 数据实体、ORM模型
+[桌面端下载](https://github.com/zy7y/dfs-generate/releases)
+
 
 > 使用过程中有疑问、或其他宝贵意见 -> [issues](https://github.com/zy7y/dfs-generate/issues)，如果你对这个项目感兴趣，欢迎加入共同实现，
 # 为什么不是其他
@@ -26,34 +28,6 @@
 ![model_code](image/model_code.png)
 ![router_code](image/router_code.png)
 ![db_code](image/db_code.png)
-# 使用项目
-> 项目本身语言版本 `Python3.8`
-1. 拉取本项目
-```shell
-git clone https://github.com/zy7y/dfs-generate.git
-```
-2. 安装依赖
-```shell
-# 可跳过：安装并使用虚拟环境
-python -m venv venv
-# 进入虚拟环境
-# win
-venv\Script\activate
-# mac / linux
-source venv/bin/activate
-```
-```shell
-# 安装依赖
-pip install -r requirements.txt -i  https://mirrors.aliyun.com/pypi/simple/
-```
-3. 启动项目
-```shell
-uvicorn main:app --port 80
-```
-4. 浏览器访问
-```shell
-http://127.0.0.1:80
-```
 
 ## Star History
 
