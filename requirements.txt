@@ -4,3 +4,5 @@ PyMySQL==1.1.0
 isort==5.13.2
 uvicorn==0.24.0.post1
 yapf==0.40.2
+pywebview==5.0.5
+Jinja2==3.1.3

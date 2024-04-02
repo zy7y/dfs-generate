@@ -1,0 +1,18 @@
+.editor-wrapper {
+  /* 相对定位 */
+  position: relative;
+}
+
+.copy-icon {
+  /* 绝对定位对于editor-wrapper */
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  z-index: 1;
+  color: #1677ff;
+  font-size: 26px;
+}
+
+.ant-tabs-tab {
+  margin-top: 0px !important;
+}

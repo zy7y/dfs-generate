@@ -14,12 +14,7 @@
 3. [fastapi-crudrouter](https://fastapi-crudrouter.awtkns.com/) 内部通过add_router方式注册路由，虽然代码减少了，但是灵活性变低了
 4. 或该更多的使用表之间[逻辑关联](https://www.zhihu.com/question/20006142)
 
-# 上图
-![home](image/home.png)
-![conf](image/conf.png)
-![model_code](image/model_code.png)
-![router_code](image/router_code.png)
-![db_code](image/db_code.png)
+
 # 使用项目
 > 桌面端请在Release处下载
 

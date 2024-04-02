@@ -1,0 +1,26 @@
+#root,
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+}
+
+#app {
+  padding: 20px;
+}
+
+.project {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo {
+  height: 100px;
+  width: auto;
+}
+.left {
+  margin: 0px 20px;
+  font-size: 30px;
+  cursor: pointer;
+}

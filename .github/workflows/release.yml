@@ -41,13 +41,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install pywebview
           pip install pyinstaller
           pip install pillow
 
       - name: Build executable
         run: |
-          python build.py
+          python .github/workflows/build.py 
 
       - name: Upload executables
         uses: actions/upload-release-asset@v1
@@ -77,13 +76,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install pywebview
           pip install pyinstaller
           pip install pillow
 
       - name: Build executable
         run: |
-          pyinstaller -w -F --add-data static:static client.py
+          python .github/workflows/build.py 
           if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             zip -r -X client-macos.zip ./dist/client.app
           fi
