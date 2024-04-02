@@ -5,6 +5,8 @@
 - d -> db 数据库
 - f -> fastapi + uvicorn 接口服务
 - s -> sqlmodel 数据实体、ORM模型
+[桌面端下载](https://github.com/zy7y/dfs-generate/releases)
+
 
 > 使用过程中有疑问、或其他宝贵意见 -> [issues](https://github.com/zy7y/dfs-generate/issues)，如果你对这个项目感兴趣，欢迎加入共同实现，
 # 为什么不是其他
@@ -13,10 +15,6 @@
 2. [SQLModel](https://github.com/tiangolo/sqlmodel/issues/654) 已有表生成模型，模型生成表，官方还未提供。
 3. [fastapi-crudrouter](https://fastapi-crudrouter.awtkns.com/) 内部通过add_router方式注册路由，虽然代码减少了，但是灵活性变低了
 4. 或该更多的使用表之间[逻辑关联](https://www.zhihu.com/question/20006142)
-
-
-# 使用项目
-> 桌面端请在Release处下载
 
 ## Star History
 <!-- STAR_HISTORY -->
