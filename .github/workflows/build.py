@@ -9,6 +9,7 @@ params = [
     f'{yapf_third_party.__file__.replace("__init__.py", "")}:yapf_third_party',
     "--clean",
     "--noconfirm",
+    "--name=client",
     "main.py",
 ]
 
