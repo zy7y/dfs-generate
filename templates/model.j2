@@ -30,15 +30,13 @@ class PageResult(Result[T]):
 
 class {{table_name | to_pascal}}DTO(SQLModel):
     {% for field in dto_fields %}
-    {{field}}
-    {% endfor%}
+    {{field}}{% endfor%}
 
 class {{table_name | to_pascal}}Query({{table_name | to_pascal}}DTO):
     page_number: int = Field(1, description="页码")
     page_size: int = Field(10, description="页量")
     {% for field in query_fields %}
-    {{field}}
-    {% endfor%}
+    {{field}}{% endfor%}
 
     def count_kwargs(self, **kwargs):
         default_exclude = {{default_exclude}}
@@ -49,8 +47,7 @@ class {{table_name | to_pascal}}Query({{table_name | to_pascal}}DTO):
 
 class {{table_name|to_pascal}}({{table_name|to_pascal}}DTO, table=True):
     {% for field in do_fields %}
-    {{field}}
-    {% endfor%}
+    {{field}}{% endfor%}
 
     @classmethod
     def create(cls, session: Session, obj_in: {{table_name|to_pascal}}DTO) -> "{{table_name|to_pascal}}":
@@ -87,7 +84,7 @@ class {{table_name|to_pascal}}({{table_name|to_pascal}}DTO, table=True):
     def count(cls, session: Session, **kwargs) -> int:
         return session.scalar(
   select(func.count()).
-  select_from({table_name}).filter_by(**kwargs)
+  select_from({{table_name|to_pascal}}).filter_by(**kwargs)
 )
 
     @classmethod
