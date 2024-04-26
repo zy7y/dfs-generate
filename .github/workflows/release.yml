@@ -31,4 +31,4 @@ jobs:
           with:
             name: Setup
             retention-days: 1
-            path: build/*-*_*.*
+            path: dist/*-*_*.*
