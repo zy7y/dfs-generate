@@ -32,5 +32,3 @@ jobs:
             name: Setup
             retention-days: 1
             path: ./dist/*
-          run: |
-            ls -l ./dist
