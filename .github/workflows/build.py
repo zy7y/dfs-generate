@@ -5,6 +5,11 @@ import yapf_third_party
 from PyInstaller import __main__ as pyi
 
 
+def build_web():
+    subprocess.call(["npm", "i"], cwd="web")
+    subprocess.call(["npm", "run", "build"], cwd="web")
+
+
 def gen_client_py():
     code = """
 import random
@@ -45,8 +50,8 @@ if __name__ == '__main__':
         f.write(code)
 
 
+build_web()
 gen_client_py()
-
 
 params = [
     "--windowed",
@@ -62,7 +67,6 @@ params = [
 ]
 
 pyi.run(params)
-
 
 # 如果是macos，则压缩打包后的目录
 if platform.system() == "Darwin":
