@@ -1,6 +1,6 @@
 from string import Template
 
-from templates import (
+from dfs_generate.templates import (
     SQLMODEL_DAO,
     TORTOISE_DAO,
     RESPONSE_SCHEMA,
@@ -10,7 +10,7 @@ from templates import (
     TORTOISE_ROUTER,
     SQLMODEL_DB,
 )
-from tools import to_pascal, tran, to_snake
+from dfs_generate.tools import to_pascal, tran, to_snake
 
 
 def _pydantic_field(column, imports):

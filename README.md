@@ -26,4 +26,11 @@
 
 <!-- CONTRIBUTORS_SECTION -->
 <!-- /CONTRIBUTORS_SECTION -->
+<details>
+<summary>WeChat打赏</summary>
+
+![wechat](docs/wechat.jpeg)
+
+</details>
+
 

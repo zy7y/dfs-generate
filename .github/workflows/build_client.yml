@@ -1,1 +1,45 @@
 # 构建桌面端
+name: build
+
+on:
+  push:
+    branches:
+      - 25-todo
+jobs:
+    build:
+      runs-on: ${{ matrix.os }}
+      strategy:
+        matrix:
+          os: [ windows-latest, macos-latest ]
+      steps:
+        - name: Checkout代码
+          uses: actions/checkout@v3
+        - name: 设置Node.js环境
+          uses: actions/setup-node@v3
+          with:
+            node-version: 18.15
+        - name: 进入web目录
+          run: cd web
+        - name: 安装依赖
+          run: npm i
+        - name: 打包Node.js应用
+          run: npm run build
+        - uses: actions/checkout@v3
+        - name: Set up Python 3.11
+          uses: actions/setup-python@v3
+          with:
+            python-version: "3.11"
+        - name: Install dependencies
+          run: |
+            pip install -r requirements-build.txt
+
+        - name: Build executable
+          run: |
+            python .github/workflows/build.py 
+
+        - name: Upload artifact
+          uses: actions/upload-artifact@v3
+          with:
+            name: Setup
+            retention-days: 1
+            path: ./dist/*
