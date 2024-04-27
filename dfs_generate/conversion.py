@@ -1,6 +1,15 @@
 from string import Template
 
-from tpl import SQLMODEL_DAO, TORTOISE_DAO, RESPONSE_SCHEMA, SQLMODEL_ROUTER, MAIN
+from templates import (
+    SQLMODEL_DAO,
+    TORTOISE_DAO,
+    RESPONSE_SCHEMA,
+    SQLMODEL_ROUTER,
+    SQLMODEL_MAIN,
+    TORTOISE_MAIN,
+    TORTOISE_ROUTER,
+    SQLMODEL_DB,
+)
 from tools import to_pascal, tran, to_snake
 
 
@@ -21,9 +30,10 @@ def _pydantic_field(column, imports):
 
 
 class Conversion:
-    def __init__(self, table_name, columns):
+    def __init__(self, table_name, columns, uri):
         self.table_name = table_name
         self.columns = columns
+        self.uri = uri
 
     @property
     def table(self):
@@ -70,7 +80,7 @@ class Conversion:
         pass
 
     def main(self):
-        return MAIN.format(router_name=self.router_name)
+        pass
 
     def gencode(self):
         return {
@@ -176,6 +186,14 @@ class SQLModelConversion(Conversion):
             router_name=self.router_name, table=self.table
         )
 
+    def main(self):
+        return SQLMODEL_MAIN.format(router_name=self.router_name)
+
+    def gencode(self):
+        data = super().gencode()
+        data["db.py"] = SQLMODEL_DB.format(uri=self.uri)
+        return data
+
 
 def _tortoise_field_repr(column):
     name = column["COLUMN_NAME"]
@@ -237,3 +255,14 @@ class TortoiseConversion(Conversion):
         imports = {"from typing import List, Optional", "import model", "import schema"}
         content = TORTOISE_DAO.format(table=self.table)
         return "\n".join(imports) + "\n\n" + content
+
+    def main(self):
+        self.uri = self.uri.replace("+pymysql", "")
+        return Template(TORTOISE_MAIN).safe_substitute(
+            router_name=self.router_name, uri=self.uri
+        )
+
+    def router(self):
+        return Template(TORTOISE_ROUTER).safe_substitute(
+            router_name=self.router_name, table=self.table
+        )

@@ -7,7 +7,6 @@ from yapf.yapflib.yapf_api import FormatCode
 
 from conversion import SQLModelConversion, TortoiseConversion
 from tools import MySQLConf, MySQLHelper
-from tpl import SQLMODEL_DB
 
 app = bottle.Bottle()
 
@@ -75,25 +74,18 @@ def codegen():
     mode = bottle.request.query.get("mode")
     results = []
     if mode == "sqlmodel":
-        data = SQLModelConversion(table, obj.get_table_columns(table)).gencode()
-
-        for k, v in data.items():
-            _code = FormatCode(v, style_config="pep8")[0]
-            v = isort.code(_code)
-            results.append({"name": k, "code": v, "key": k})
-        results.append(
-            {
-                "name": "db.py",
-                "code": SQLMODEL_DB.format(uri=obj.conf.get_db_uri()),
-                "key": "db.py",
-            }
-        )
+        _instance = SQLModelConversion
     else:
-        data = TortoiseConversion(table, obj.get_table_columns(table)).gencode()
-        for k, v in data.items():
-            _code = FormatCode(v, style_config="pep8")[0]
-            v = isort.code(_code)
-            results.append({"name": k, "code": v, "key": k})
+        _instance = TortoiseConversion
+
+    data = _instance(
+        table, obj.get_table_columns(table), obj.conf.get_db_uri()
+    ).gencode()
+
+    for k, v in data.items():
+        _code = FormatCode(v, style_config="pep8")[0]
+        v = isort.code(_code)
+        results.append({"name": k, "code": v, "key": k})
     return {"code": 20000, "msg": "ok", "data": results}
 
 
