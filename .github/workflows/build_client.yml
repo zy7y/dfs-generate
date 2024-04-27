@@ -1,9 +1,10 @@
-name: release
+# 构建桌面端
+name: build
 
 on:
   push:
     branches:
-      - master
+      - 25-todo
 jobs:
     build:
       runs-on: ${{ matrix.os }}
@@ -11,16 +12,22 @@ jobs:
         matrix:
           os: [ windows-latest, macos-latest ]
       steps:
-        - uses: actions/checkout@v3
-        - name: Set up Python 3.11
+        - name: 拉代码
+          uses: actions/checkout@v3
+
+        - name: Node 18.15
+          uses: actions/setup-node@v3
+          with:
+            node-version: "18.15"
+
+        - name: Python 3.11
           uses: actions/setup-python@v3
           with:
             python-version: "3.11"
+
         - name: Install dependencies
           run: |
-            pip install -r requirements.txt
-            pip install pyinstaller
-            pip install pillow
+            pip install -r requirements-build.txt
 
         - name: Build executable
           run: |
