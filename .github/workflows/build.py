@@ -6,8 +6,8 @@ from PyInstaller import __main__ as pyi
 
 
 def build_web():
-    subprocess.run(["npm", "i"], cwd="web", shell=True)
-    subprocess.run(["npm", "run", "build"], cwd="web", shell=True)
+    subprocess.run("npm i", cwd="web", shell=True)
+    subprocess.run("npm run build", cwd="web", shell=True)
 
 
 def gen_client_py():
