@@ -1,4 +1,6 @@
 import yapf_third_party
+from PyInstaller import __main__ as pyi
+
 
 params = [
     "--windowed",
@@ -10,9 +12,8 @@ params = [
     "--clean",
     "--noconfirm",
     "--name=client",
-    "main.py",
+    "server.py",
 ]
 
-from PyInstaller import __main__ as pyi
 
 pyi.run(params)

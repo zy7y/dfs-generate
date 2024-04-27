@@ -22,7 +22,7 @@ const TableItem = ({ codes }) => {
   );
 };
 
-const CodeGenerate = ({ tables }) => {
+const CodeGenerate = ({ tables, mode }) => {
   const [selectTable, setSelectTable] = useState(tables[0]);
   const [generateCodes, setGenerateCodes] = useState([]);
 
@@ -30,7 +30,9 @@ const CodeGenerate = ({ tables }) => {
 
   const changeTableGetCode = async () => {
     // await
-    const res = await fetch(`${host}/codegen?tableName=${selectTable}`);
+    const res = await fetch(
+      `${host}/codegen?tableName=${selectTable}&mode=${mode}`
+    );
     const resData = await res.json();
     console.log(resData);
     if (resData?.code == 40000) {

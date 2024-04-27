@@ -10,7 +10,11 @@ import {
   Affix,
 } from "antd";
 import { useEffect, useState } from "react";
-import { CodepenOutlined, SettingOutlined } from "@ant-design/icons";
+import {
+  CodepenOutlined,
+  SettingOutlined,
+  RedditOutlined,
+} from "@ant-design/icons";
 import CodeGenerate from "../compoents/codegen";
 import { host } from "../conf";
 
@@ -19,20 +23,40 @@ const changDBFormRules = [{ required: true, message: "该项必须填写" }];
 // 修改配置组件
 const ChangeDB = ({ onDbFinsh }) => {
   return (
-    <Form onFinish={(values) => onDbFinsh(values)}>
-      <Form.Item name="host" rules={changDBFormRules}>
+    <Form
+      onFinish={(values) => onDbFinsh(values)}
+      initialValues={JSON.parse(
+        localStorage.getItem("dbConf") ??
+          JSON.stringify({
+            host: "127.0.0.1",
+            port: 3306,
+            passowrd: "123456",
+            user: "root",
+            db: "mini-rbac",
+          })
+      )}
+    >
+      <Form.Item
+        name="host"
+        rules={changDBFormRules}
+        initialValue={"127.0.0.1"}
+      >
         <Input placeholder="主机地址如：127.0.0.1"></Input>
       </Form.Item>
       <Form.Item name="user" rules={changDBFormRules}>
         <Input placeholder="账号如：root"></Input>
       </Form.Item>
-      <Form.Item name="password" rules={changDBFormRules}>
+      <Form.Item
+        name="password"
+        rules={changDBFormRules}
+        initialValue={"123456"}
+      >
         <Input.Password placeholder="密码如：123456"></Input.Password>
       </Form.Item>
       <Form.Item name="db" rules={changDBFormRules}>
         <Input placeholder="数据库名称如：mini-rbac"></Input>
       </Form.Item>
-      <Form.Item name="port" label="端口号" initialValue={3306}>
+      <Form.Item name="port" label="端口号">
         <InputNumber placeholder="如：3306"></InputNumber>
       </Form.Item>
       <Form.Item>
@@ -69,7 +93,21 @@ const DFSContent = () => {
     setTableData(resData.data);
   };
 
+  const resetContentDB = async () => {
+    const resConf = await fetch(`${host}/conf`, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: localStorage.getItem("dbConf"),
+    });
+    const resData = await resConf.json();
+    console.log(resData, resConf);
+  };
   useEffect(() => {
+    if (localStorage.getItem("dbConf")) {
+      resetContentDB();
+    }
     getTables();
   }, []);
 
@@ -95,6 +133,7 @@ const DFSContent = () => {
   const [modalOpen, setModalOpen] = useState(false);
 
   const onDbFinsh = async (values) => {
+    localStorage.setItem("dbConf", JSON.stringify(values));
     const res = await fetch(`${host}/conf`, {
       method: "post",
       headers: {
@@ -114,6 +153,7 @@ const DFSContent = () => {
 
   // 生成代码
   const [openDrawer, setOpenDrawer] = useState(false);
+  const [mode, setMode] = useState("sqlmodel");
 
   return (
     <div>
@@ -129,11 +169,26 @@ const DFSContent = () => {
           </Form.Item>
           <Form.Item>
             <Button
-              onClick={() => setOpenDrawer(true)}
+              onClick={() => {
+                setOpenDrawer(true);
+                setMode("sqlmodel");
+              }}
+              disabled={!selectTable.length}
+            >
+              <RedditOutlined />
+              SQLModel
+            </Button>
+          </Form.Item>
+          <Form.Item>
+            <Button
+              onClick={() => {
+                setOpenDrawer(true);
+                setMode("tortoise");
+              }}
               disabled={!selectTable.length}
             >
               <CodepenOutlined />
-              生成代码
+              Tortoise ORM
             </Button>
           </Form.Item>
           <Form.Item>
@@ -178,7 +233,7 @@ const DFSContent = () => {
         destroyOnClose={true}
         keyboard={false}
       >
-        <CodeGenerate tables={selectTable} />
+        <CodeGenerate tables={selectTable} mode={mode} />
       </Drawer>
     </div>
   );
