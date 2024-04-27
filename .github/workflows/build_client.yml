@@ -27,9 +27,7 @@ jobs:
 
         - name: Install dependencies
           run: |
-            pip install -r requirements.txt
-            pip install pyinstaller
-            pip install pillow
+            pip install -r requirements-build.txt
 
         - name: Build executable
           run: |
