@@ -62,7 +62,7 @@ if __name__ == '__main__':
         f.write(code)
 
 
-# build_web()
+build_web()
 gen_client_py()
 
 
