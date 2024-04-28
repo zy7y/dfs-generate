@@ -3,7 +3,7 @@ from dataclasses import dataclass, asdict
 
 import pymysql
 
-from dfs_generate.types_map import TYPES
+from types_map import TYPES
 
 
 def tran(t, mode) -> dict:

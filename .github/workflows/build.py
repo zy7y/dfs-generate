@@ -1,8 +1,12 @@
+import os.path
 import platform
 import subprocess
 
+import pymysql
 import yapf_third_party
 from PyInstaller import __main__ as pyi
+
+CLIENT_PY = "dfs_generate/client.py"
 
 
 def build_web():
@@ -15,6 +19,14 @@ def gen_client_py():
 import random
 import socket
 import threading
+import sys
+monkey_patch = type('MonkeyPatchSys', (object,), {'write': lambda self, *args, **kwargs: None})
+
+if sys.stderr is None:
+    sys.stderr = monkey_patch()
+
+if sys.stdout is None:
+    sys.stdout = monkey_patch()
 
 from dfs_generate.server import app
 
@@ -46,24 +58,33 @@ def desktop_client():
 if __name__ == '__main__':
     desktop_client()
     """
-    with open("dfs_generate/client.py", "w", encoding="utf-8") as f:
+    with open(CLIENT_PY, "w", encoding="utf-8") as f:
         f.write(code)
 
 
-build_web()
+# build_web()
 gen_client_py()
+
+
+def get_pyinstaller_add_data_by_package(name):
+    return f'{name.__file__.replace("__init__.py", "")}:{name.__name__}'
+
 
 params = [
     "--windowed",
     "--onefile",
     "--add-data",
-    "web/dist:web/dist",
+    "dfs_generate/*:.",
     "--add-data",
-    f'{yapf_third_party.__file__.replace("__init__.py", "")}:yapf_third_party',
+    get_pyinstaller_add_data_by_package(pymysql),
+    "--add-data",
+    get_pyinstaller_add_data_by_package(yapf_third_party),
+    "--add-data",
+    "web/dist:web/dist",
     "--clean",
     "--noconfirm",
     "--name=client",
-    "dfs_generate/client.py",
+    CLIENT_PY,
 ]
 
 pyi.run(params)
@@ -77,3 +98,6 @@ if platform.system() == "Darwin":
     # 删除空目录
     rm_cmds = ["rm", "-rf", "dist/client"]
     subprocess.call(rm_cmds)
+
+if os.path.isfile(CLIENT_PY):
+    os.remove(CLIENT_PY)
