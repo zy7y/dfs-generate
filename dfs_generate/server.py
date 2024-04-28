@@ -5,8 +5,8 @@ import bottle
 import isort
 from yapf.yapflib.yapf_api import FormatCode
 
-from dfs_generate.conversion import SQLModelConversion, TortoiseConversion
-from dfs_generate.tools import MySQLConf, MySQLHelper
+from conversion import SQLModelConversion, TortoiseConversion
+from tools import MySQLConf, MySQLHelper
 
 app = bottle.Bottle()
 
@@ -16,7 +16,6 @@ CACHE: Dict[str, MySQLHelper] = {}
 static_file_abspath = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "web", "dist"
 )
-print(static_file_abspath)
 
 
 @app.hook("before_request")
