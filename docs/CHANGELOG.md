@@ -1,4 +1,7 @@
 # Change Log
+## Release v0.2.1  (2024-04-28)
+- #35 修复Windows桌面端运行报错
+- #34 增加源码运行说明
 
 ## Release v0.2.0 （2024-04-27）
 - #30 支持Tortoise ORM 代码生成
