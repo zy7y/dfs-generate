@@ -92,10 +92,11 @@ pyi.run(params)
 
 # 如果是macos，则压缩打包后的目录
 if platform.system() == "Darwin":
+    CWD = "dist"
     subprocess.call(["npm", "i", "-g", "create-dmg"])
-    subprocess.call(["create-dmg", "dist/client.app"])
-    subprocess.call(["rm", "-rf", "dist/*"])
-    shutil.move("client 0.0.0.dmg", "client.dmg")
+    subprocess.call(["create-dmg", "client.app"], cwd=CWD)
+    subprocess.call(["rm", "-rf", "client.app", "client"], cwd=CWD)
+    subprocess.call(["mv", "client 0.0.0.dmg", "client.dmg"], cwd=CWD)
 
 if os.path.isfile(CLIENT_PY):
     os.remove(CLIENT_PY)
