@@ -2,9 +2,9 @@
 name: build
 
 on:
-  push:
-    branches:
-      - 25-todo
+  release:
+    types:
+      - created
 jobs:
     build:
       runs-on: ${{ matrix.os }}
