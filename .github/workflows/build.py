@@ -92,7 +92,7 @@ pyi.run(params)
 # 如果是macos，则压缩打包后的目录
 if platform.system() == "Darwin":
     subprocess.call(["npm", "i", "-g", "create-dmg"])
-    subprocess.call(["create-dmg", "client.dmg", "dist/client.app"])
+    subprocess.call(["create-dmg", "dist/client.dmg", "dist/client.app"])
     subprocess.call(["rm", "-rf", "dist/client.app"])
     subprocess.call(["rm", "-rf", "dist/client"])
 
