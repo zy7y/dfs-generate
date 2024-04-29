@@ -1,5 +1,4 @@
-// 服务地址
-//const host = "http://127.0.0.1:8080";
- const host = "";
+
+const host = import.meta.env.VITE_BASE_URL;
 
 export { host };
