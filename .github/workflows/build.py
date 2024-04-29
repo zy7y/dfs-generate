@@ -1,5 +1,6 @@
 import os.path
 import platform
+import shutil
 import subprocess
 
 import pymysql
@@ -92,9 +93,9 @@ pyi.run(params)
 # 如果是macos，则压缩打包后的目录
 if platform.system() == "Darwin":
     subprocess.call(["npm", "i", "-g", "create-dmg"])
-    subprocess.call(["create-dmg", "client.app", "--dmg-title", "client.dmg"], cwd="dist")
-    subprocess.call(["rm", "-rf", "dist/client.app"])
-    subprocess.call(["rm", "-rf", "dist/client"])
+    subprocess.call(["create-dmg", "dist/client.app"])
+    subprocess.call(["rm", "-rf", "dist/*"])
+    shutil.move("client 0.0.0.dmg", "client.dmg")
 
 if os.path.isfile(CLIENT_PY):
     os.remove(CLIENT_PY)
