@@ -1,3 +1,14 @@
+DOC_DESC ='''
+[![](https://img.shields.io/github/stars/zy7y/dfs-generate)](https://github.com/zy7y/dfs-generate)
+[![](https://img.shields.io/github/forks/zy7y/dfs-generate)](https://github.com/zy7y/dfs-generate)
+[![](https://img.shields.io/github/repo-size/zy7y/dfs-generate?style=social)](https://github.com/zy7y/dfs-generate)
+[![](https://img.shields.io/github/license/zy7y/dfs-generate)](https://gitee.com/zy7y/dfs-generate/blob/master/LICENSE)
+
+支持ORM：[SQLModel](https://sqlmodel.tiangolo.com/)、[Tortoise ORM](https://tortoise.github.io/)
+
+支持前端: [Vue](https://cn.vuejs.org/)
+'''
+
 RESPONSE_SCHEMA = """
 from typing import Generic, TypeVar, List, Optional
 from pydantic import BaseModel
@@ -22,6 +33,13 @@ class PageResult(Result[T]):
     @classmethod
     def ok(cls, data: List[T], message: str = "成功", total: int = 0):
         return cls(data=data, total=total, message=message, success=True)
+
+class PageParam(BaseModel):
+    page_number: int = Field(1, description="页码")
+    page_size: int = Field(10, description="每页数量")
+
+    model_config = {"alias_generator": to_camel, "populate_by_name": True}
+
 """
 
 SQLMODEL_DAO = """
@@ -78,10 +96,10 @@ def query_${router_name}_by_id(id: int) -> schema.Result[schema.$table]:
         return schema.Result.ok(dao.query_by_id(session, id))
 
 @$router_name.get("", summary="分页条件查询")
-def query_${router_name}_all_by_limit(query: schema.$table = Depends(), page_number: int = 1, page_size: int = 10) -> schema.PageResult[schema.$table]:
+def query_${router_name}_all_by_limit(query: schema.$table = Depends(), page: schema.PageParam = Depends()) -> schema.PageResult[schema.$table]:
     with Session(engine) as session:
         total = dao.count(session, **query.model_dump(exclude_none=True))
-        data = dao.query_all_by_limit(session, **query.model_dump(exclude_none=True), page_number=page_number, page_size=page_size)
+        data = dao.query_all_by_limit(session, **query.model_dump(exclude_none=True), page_number=page.page_number, page_size=page.page_size)
         return schema.PageResult.ok(data=data, total=total)
 
 
@@ -118,17 +136,7 @@ from router import {router_name}
 
 
 app = FastAPI(title="DFS - FastAPI SQLModel CRUD", 
-description='''
-[![](https://img.shields.io/github/stars/zy7y/dfs-generate)](https://github.com/zy7y/dfs-generate)
-[![](https://img.shields.io/github/forks/zy7y/dfs-generate)](https://github.com/zy7y/dfs-generate)
-[![](https://img.shields.io/github/repo-size/zy7y/dfs-generate?style=social)](https://github.com/zy7y/dfs-generate)
-[![](https://img.shields.io/github/license/zy7y/dfs-generate)](https://gitee.com/zy7y/dfs-generate/blob/master/LICENSE)
-
-支持ORM：[SQLModel](https://sqlmodel.tiangolo.com/)、[Tortoise ORM](https://tortoise.github.io/)
-
-支持前端: [Vue](https://cn.vuejs.org/)、[React](https://zh-hans.react.dev/)'''
-
-)
+description='''%s''')
 
 
 app.include_router({router_name})
@@ -136,7 +144,10 @@ app.include_router({router_name})
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run("main:app", reload=True, port=5000)
-"""
+""" % DOC_DESC
+
+
+# Tortoise ORM
 
 TORTOISE_DAO = """
 async def create(obj_in: schema.{table}) -> model.{table}:
@@ -182,9 +193,9 @@ async def query_${router_name}_by_id(id: int) -> schema.Result[schema.$table]:
     return schema.Result.ok(await dao.query_by_id(id))
 
 @$router_name.get("", summary="分页条件查询")
-async def query_${router_name}_all_by_limit(query: schema.$table = Depends(), page_number: int = 1, page_size: int = 10) -> schema.PageResult[schema.$table]:
+async def query_${router_name}_all_by_limit(query: schema.$table = Depends(), page: schema.PageParam = Depends()) -> schema.PageResult[schema.$table]:
     total = await dao.count(**query.model_dump(exclude_none=True))
-    data = await dao.query_all_by_limit(**query.model_dump(exclude_none=True), page_number=page_number, page_size=page_size)
+    data = await dao.query_all_by_limit(**query.model_dump(exclude_none=True), page_number=page.page_number, page_size=page.page_size)
     return schema.PageResult.ok(data=data, total=total)       
 
 
@@ -211,18 +222,7 @@ from tortoise.contrib.fastapi import register_tortoise
 from router import $router_name
 
 
-app = FastAPI(title="DFS - FastAPI Tortoise ORM CRUD",
-description='''
-[![](https://img.shields.io/github/stars/zy7y/dfs-generate)](https://github.com/zy7y/dfs-generate)
-[![](https://img.shields.io/github/forks/zy7y/dfs-generate)](https://github.com/zy7y/dfs-generate)
-[![](https://img.shields.io/github/repo-size/zy7y/dfs-generate?style=social)](https://github.com/zy7y/dfs-generate)
-[![](https://img.shields.io/github/license/zy7y/dfs-generate)](https://gitee.com/zy7y/dfs-generate/blob/master/LICENSE)
-
-支持ORM：[SQLModel](https://sqlmodel.tiangolo.com/)、[Tortoise ORM](https://tortoise.github.io/)
-
-支持前端: [Vue](https://cn.vuejs.org/)、[React](https://zh-hans.react.dev/)'''
-
-)
+app = FastAPI(title="DFS - FastAPI Tortoise ORM CRUD",description='''%s''')
 
 
 register_tortoise(
@@ -239,4 +239,4 @@ app.include_router($router_name)
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run("main:app", reload=True, port=5000)
-"""
+""" % DOC_DESC
