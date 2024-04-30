@@ -4,17 +4,17 @@ import model
 import schema
 
 
-async def create(obj_in: schema.Aerich) -> model.Aerich:
-    obj = model.Aerich(**obj_in.dict())
+async def create(obj_in: schema.SysMenu) -> model.SysMenu:
+    obj = model.SysMenu(**obj_in.dict())
     await obj.save()
     return obj
 
 
-async def query_by_id(id: int) -> Optional[model.Aerich]:
-    return await model.Aerich.get_or_none(id=id)
+async def query_by_id(id: int) -> Optional[model.SysMenu]:
+    return await model.SysMenu.get_or_none(id=id)
 
 
-async def update(id: int, obj_in: schema.Aerich) -> Optional[model.Aerich]:
+async def update(id: int, obj_in: schema.SysMenu) -> Optional[model.SysMenu]:
     obj = await query_by_id(id)
     if obj:
         for field, value in obj_in.dict(exclude_unset=True).items():
@@ -23,7 +23,7 @@ async def update(id: int, obj_in: schema.Aerich) -> Optional[model.Aerich]:
     return obj
 
 
-async def delete_by_id(id: int) -> Optional[model.Aerich]:
+async def delete_by_id(id: int) -> Optional[model.SysMenu]:
     obj = await query_by_id(id)
     if obj:
         await obj.delete()
@@ -31,12 +31,12 @@ async def delete_by_id(id: int) -> Optional[model.Aerich]:
 
 
 async def count(**kwargs) -> int:
-    return await model.Aerich.filter(**kwargs).count()
+    return await model.SysMenu.filter(**kwargs).count()
 
 
-async def query_all_by_limit(
-    page_number: int, page_size: int, **kwargs
-) -> List[model.Aerich]:
+async def query_all_by_limit(page_number: int, page_size: int,
+                             **kwargs) -> List[model.SysMenu]:
     offset = (page_number - 1) * page_size
     limit = page_size
-    return await model.Aerich.filter(**kwargs).offset(offset).limit(limit).all()
+    return await model.SysMenu.filter(**kwargs
+                                      ).offset(offset).limit(limit).all()

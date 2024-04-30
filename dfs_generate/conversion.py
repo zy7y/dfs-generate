@@ -164,6 +164,7 @@ class SQLModelConversion(Conversion):
     def model(self):
         imports = {"from sqlmodel import SQLModel, Field"}
         head = f"class {self.table}(SQLModel, table=True):"
+        head += f"\n    __tablename__ = '{self.table_name}'"
         fields = []
         for column in self.columns:
             field = _sqlmodel_field_repr(column, imports)
@@ -249,7 +250,7 @@ class TortoiseConversion(Conversion):
             field = _tortoise_field_repr(column)
             if "    " + field not in fields:
                 fields.append("    " + field)
-        return "\n".join(imports) + "\n\n" + head + "\n" + "\n".join(fields)
+        return "\n".join(imports) + "\n\n" + head + "\n" + "\n".join(fields) + f"\n{' ' * 4}class Meta:\n{' ' * 8}table='{self.table_name}'"
 
     def dao(self):
         imports = {"from typing import List, Optional", "import model", "import schema"}
