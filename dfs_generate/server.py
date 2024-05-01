@@ -5,8 +5,8 @@ import bottle
 import isort
 from yapf.yapflib.yapf_api import FormatCode
 
-from conversion import SQLModelConversion, TortoiseConversion
-from tools import MySQLConf, MySQLHelper
+from dfs_generate.conversion import SQLModelConversion, TortoiseConversion
+from dfs_generate.tools import MySQLConf, MySQLHelper
 
 app = bottle.Bottle()
 
