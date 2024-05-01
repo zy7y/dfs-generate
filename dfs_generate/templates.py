@@ -1,4 +1,4 @@
-DOC_DESC ='''
+DOC_DESC = """
 [![](https://img.shields.io/github/stars/zy7y/dfs-generate)](https://github.com/zy7y/dfs-generate)
 [![](https://img.shields.io/github/forks/zy7y/dfs-generate)](https://github.com/zy7y/dfs-generate)
 [![](https://img.shields.io/github/repo-size/zy7y/dfs-generate?style=social)](https://github.com/zy7y/dfs-generate)
@@ -7,7 +7,7 @@ DOC_DESC ='''
 支持ORM：[SQLModel](https://sqlmodel.tiangolo.com/)、[Tortoise ORM](https://tortoise.github.io/)
 
 支持前端: [Vue](https://cn.vuejs.org/)
-'''
+"""
 
 RESPONSE_SCHEMA = """
 from typing import Generic, TypeVar, List, Optional
@@ -129,8 +129,11 @@ db_uri = "{uri}"
 engine = create_engine(db_uri)
 """
 
-SQLMODEL_MAIN = """
+SQLMODEL_MAIN = (
+    """
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
+
 
 from router import {router_name}
 
@@ -138,13 +141,22 @@ from router import {router_name}
 app = FastAPI(title="DFS - FastAPI SQLModel CRUD", 
 description='''%s''')
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router({router_name})
 
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run("main:app", reload=True, port=5000)
-""" % DOC_DESC
+"""
+    % DOC_DESC
+)
 
 
 # Tortoise ORM
@@ -215,8 +227,10 @@ async def delete_${router_name}_by_id(id: int) -> schema.Result[schema.$table]:
 """
 
 
-TORTOISE_MAIN = """
+TORTOISE_MAIN = (
+    """
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 
 from router import $router_name
@@ -233,10 +247,137 @@ register_tortoise(
         add_exception_handlers=True,
     )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router($router_name)
 
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run("main:app", reload=True, port=5000)
-""" % DOC_DESC
+"""
+    % DOC_DESC
+)
+
+# Vue
+VUE_CRUD_TS = """
+/**
+ * dfs-generate 生成FastAPI Tortoise ORM / SQLModel、Vue3 CRUD代码
+ * dfs-generate Github: https://github.com/zy7y/dfs-generate
+ * Vue CRUD代码基于fast-crud，更多用法请查看其官方文档 http://fast-crud.docmirror.cn/ 
+ */
+import { CreateCrudOptionsProps, CreateCrudOptionsRet, dict } from "@fast-crud/fast-crud";
+import { addRequest, delRequest, editRequest, pageRequest } from "./api";
+
+export default function ({ crudExpose, context }: CreateCrudOptionsProps<any>): CreateCrudOptionsRet<any> {
+  return {
+    crudOptions: {
+      request: {
+        pageRequest,
+        addRequest,
+        editRequest,
+        delRequest
+      },
+      columns: %s
+    }
+  };
+}
+
+"""
+
+VUE_API_TS = """
+/**
+ * dfs-generate 生成FastAPI Tortoise ORM / SQLModel、Vue3 CRUD代码
+ * dfs-generate Github: https://github.com/zy7y/dfs-generate
+ * Vue CRUD代码基于fast-crud，更多用法请查看其官方文档 http://fast-crud.docmirror.cn/ 
+ */
+import { AddReq, DelReq, EditReq, UserPageQuery, UserPageRes } from "@fast-crud/fast-crud";
+import axios from "axios";
+
+const url = "http://127.0.1:5000/%s";
+
+export const pageRequest = async (query: UserPageQuery): Promise<UserPageRes> => {
+  const { limit, offset } = query.page;
+  const pageNumber = offset / limit + 1;
+  const pageSize = limit;
+  const res = await axios.get(url, {
+    params: {
+      pageNumber,
+      pageSize,
+      ...query.query
+    }
+  });
+  return {
+    records: res.data.data,
+    ...query.page,
+    total: res.data.total
+  };
+};
+export const editRequest = async ({ form, row }: EditReq) => {
+  const res = await axios.patch(url + "/" + row.id, {
+    data: form,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+  return res.data.data;
+};
+export const delRequest = async ({ row }: DelReq) => {
+  const res = await axios.delete(url + "/" + row.id);
+  return res.data.data;
+};
+
+export const addRequest = async ({ form }: AddReq) => {
+  const res = await axios.post(url, {
+    data: form,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+  return res.data.data;
+};
+
+"""
+
+VUE_INDEX_VUE = """
+<!-- 
+dfs-generate 生成FastAPI Tortoise ORM / SQLModel、Vue3 CRUD代码
+dfs-generate Github: https://github.com/zy7y/dfs-generate
+Vue CRUD代码基于fast-crud，更多用法请查看其官方文档 http://fast-crud.docmirror.cn/ 
+-->
+<template>
+  <fs-page>
+    <fs-crud ref="crudRef" v-bind="crudBinding" />
+  </fs-page>
+</template>
+
+<script lang="ts">
+import { defineComponent, onMounted } from "vue";
+import { useFs, OnExposeContext } from "@fast-crud/fast-crud";
+import createCrudOptions from "./curd";
+
+//此处为组件定义
+export default defineComponent({
+  name: "FsCrud%s",
+  setup(props: any, ctx: any) {
+    const context: any = { props, ctx }; // 自定义变量, 将会传递给createCrudOptions, 比如直接把props,和ctx直接传过去使用
+    function onExpose(e: OnExposeContext) {} //将在createOptions之前触发，可以获取到crudExpose,和context
+    const { crudRef, crudBinding, crudExpose } = useFs<any>({ createCrudOptions, onExpose, context });
+
+    // 页面打开后获取列表数据
+    onMounted(() => {
+      crudExpose.doRefresh();
+    });
+    return {
+      crudBinding,
+      crudRef
+    };
+  }
+});
+</script>
+"""

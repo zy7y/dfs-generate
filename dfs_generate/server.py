@@ -50,10 +50,12 @@ def index():
 @app.post("/conf")
 def connect():
     payload = bottle.request.json
-    if payload:
+    try:
         conf = MySQLConf(**payload)
         CACHE["connect"] = MySQLHelper(conf)
         return {"code": 20000, "msg": "ok", "data": None}
+    except Exception as e:
+        return {"code": 40000, "msg": str(e), "data": None}
 
 
 @app.get("/tables")
@@ -66,7 +68,7 @@ def tables():
             if like in table
         ]
         return {"code": 20000, "msg": "ok", "data": data}
-    return []
+    return {"code": 40000, "msg": "error", "data": None}
 
 
 @app.get("/codegen")
@@ -85,8 +87,9 @@ def codegen():
     ).gencode()
 
     for k, v in data.items():
-        _code = FormatCode(v, style_config="pep8")[0]
-        v = isort.code(_code)
+        if k.endswith("py"):
+            _code = FormatCode(v, style_config="pep8")[0]
+            v = isort.code(_code)
         results.append({"name": k, "code": v, "key": k})
     return {"code": 20000, "msg": "ok", "data": results}
 
