@@ -44,7 +44,7 @@ class PageParam(BaseModel):
 
 SQLMODEL_DAO = """
 def create(session: Session, obj_in: schema.{table}) -> model.{table}:
-    obj = model.{table}(**obj_in.dict())
+    obj = model.{table}(**obj_in.model_dump(exclude_unset=True))
     session.add(obj)
     session.commit()
     session.refresh(obj)
@@ -56,7 +56,7 @@ def query_by_id(session: Session, id: int) -> Optional[model.{table}]:
 def update(session: Session, id: int, obj_in: schema.{table}) -> Optional[model.{table}]:
     obj = query_by_id(session, id)
     if obj:
-        for field, value in obj_in.dict(exclude_unset=True).items():
+        for field, value in obj_in.model_dump(exclude_unset=True).items():
             setattr(obj, field, value)
         session.add(obj)
         session.commit()
@@ -163,7 +163,7 @@ if __name__ == '__main__':
 
 TORTOISE_DAO = """
 async def create(obj_in: schema.{table}) -> model.{table}:
-    obj = model.{table}(**obj_in.dict())
+    obj = model.{table}(**obj_in.model_dump(exclude_unset=True))
     await obj.save()
     return obj
 
@@ -173,7 +173,7 @@ async def query_by_id(id: int) -> Optional[model.{table}]:
 async def update(id: int, obj_in: schema.{table}) -> Optional[model.{table}]:
     obj= await query_by_id(id)
     if obj:
-        for field, value in obj_in.dict(exclude_unset=True).items():
+        for field, value in obj_in.model_dump(exclude_unset=True).items():
             setattr(obj, field, value)
         await obj.save()
     return obj
@@ -294,7 +294,7 @@ VUE_API_TS = """
 /**
  * dfs-generate 生成FastAPI Tortoise ORM / SQLModel、Vue3 CRUD代码
  * dfs-generate Github: https://github.com/zy7y/dfs-generate
- * Vue CRUD代码基于fast-crud，更多用法请查看其官方文档 http://fast-crud.docmirror.cn/ 
+ * Vue CRUD代码基于fast-crud，更多用法请查看其官方文档 http://fast-crud.docmirror.cn/
  */
 import { AddReq, DelReq, EditReq, UserPageQuery, UserPageRes } from "@fast-crud/fast-crud";
 import axios from "axios";
@@ -319,8 +319,7 @@ export const pageRequest = async (query: UserPageQuery): Promise<UserPageRes> =>
   };
 };
 export const editRequest = async ({ form, row }: EditReq) => {
-  const res = await axios.patch(url + "/" + row.id, {
-    data: form,
+  const res = await axios.patch(url + "/" + row.id, form, {
     headers: {
       "Content-Type": "application/json"
     }
@@ -333,8 +332,7 @@ export const delRequest = async ({ row }: DelReq) => {
 };
 
 export const addRequest = async ({ form }: AddReq) => {
-  const res = await axios.post(url, {
-    data: form,
+  const res = await axios.post(url, form, {
     headers: {
       "Content-Type": "application/json"
     }
