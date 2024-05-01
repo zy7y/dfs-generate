@@ -5,7 +5,7 @@ import schema
 
 
 async def create(obj_in: schema.SysMenu) -> model.SysMenu:
-    obj = model.SysMenu(**obj_in.dict())
+    obj = model.SysMenu(**obj_in.model_dump(exclude_unset=True))
     await obj.save()
     return obj
 
@@ -17,7 +17,7 @@ async def query_by_id(id: int) -> Optional[model.SysMenu]:
 async def update(id: int, obj_in: schema.SysMenu) -> Optional[model.SysMenu]:
     obj = await query_by_id(id)
     if obj:
-        for field, value in obj_in.dict(exclude_unset=True).items():
+        for field, value in obj_in.model_dump(exclude_unset=True).items():
             setattr(obj, field, value)
         await obj.save()
     return obj
@@ -34,9 +34,9 @@ async def count(**kwargs) -> int:
     return await model.SysMenu.filter(**kwargs).count()
 
 
-async def query_all_by_limit(page_number: int, page_size: int,
-                             **kwargs) -> List[model.SysMenu]:
+async def query_all_by_limit(
+    page_number: int, page_size: int, **kwargs
+) -> List[model.SysMenu]:
     offset = (page_number - 1) * page_size
     limit = page_size
-    return await model.SysMenu.filter(**kwargs
-                                      ).offset(offset).limit(limit).all()
+    return await model.SysMenu.filter(**kwargs).offset(offset).limit(limit).all()

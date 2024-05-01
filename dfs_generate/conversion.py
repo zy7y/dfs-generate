@@ -199,7 +199,7 @@ class SQLModelConversion(Conversion):
 
     def dao(self):
         imports = {
-            "from sqlmodel import Session, SQLModel,select, func, Field",
+            "from sqlmodel import Session,select, func",
             "from typing import List, Optional",
             "import model",
             "import schema",
