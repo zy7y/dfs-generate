@@ -9,6 +9,9 @@ from templates import (
     TORTOISE_MAIN,
     TORTOISE_ROUTER,
     SQLMODEL_DB,
+    VUE_API_TS,
+    VUE_INDEX_VUE,
+    VUE_CRUD_TS,
 )
 from tools import to_pascal, tran, to_snake
 
@@ -27,6 +30,13 @@ def _pydantic_field(column, imports):
     if info["import"]:
         imports.add(info["import"])
     return field
+
+
+def _fast_crud_column(column):
+    name = column["COLUMN_NAME"]
+    title = column["COLUMN_COMMENT"] or name
+    fmt = f"{name}: {{ title: '{title}', type: 'text', search: {{ show: true }}}}"
+    return fmt
 
 
 class Conversion:
@@ -82,6 +92,18 @@ class Conversion:
     def main(self):
         pass
 
+    def vue_api_ts(self):
+        return VUE_API_TS % self.table
+
+    def vue_crud_ts(self):
+        columns = (
+            "{" + ",".join(_fast_crud_column(column) for column in self.columns) + "}"
+        )
+        return VUE_CRUD_TS % columns
+
+    def vue_index_vue(self):
+        return VUE_INDEX_VUE % self.table
+
     def gencode(self):
         return {
             "model.py": self.model(),
@@ -89,6 +111,9 @@ class Conversion:
             "router.py": self.router(),
             "schema.py": self.schema(),
             "main.py": self.main(),
+            "api.ts": self.vue_api_ts(),
+            "crud.ts": self.vue_crud_ts(),
+            "index.vue": self.vue_index_vue(),
         }
 
 
@@ -250,7 +275,14 @@ class TortoiseConversion(Conversion):
             field = _tortoise_field_repr(column)
             if "    " + field not in fields:
                 fields.append("    " + field)
-        return "\n".join(imports) + "\n\n" + head + "\n" + "\n".join(fields) + f"\n{' ' * 4}class Meta:\n{' ' * 8}table='{self.table_name}'"
+        return (
+            "\n".join(imports)
+            + "\n\n"
+            + head
+            + "\n"
+            + "\n".join(fields)
+            + f"\n{' ' * 4}class Meta:\n{' ' * 8}table='{self.table_name}'"
+        )
 
     def dao(self):
         imports = {"from typing import List, Optional", "import model", "import schema"}
