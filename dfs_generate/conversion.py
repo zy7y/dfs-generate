@@ -13,7 +13,7 @@ from dfs_generate.templates import (
     VUE_INDEX_VUE,
     VUE_CRUD_TS,
 )
-from dfs_generate.tools import to_pascal, tran, to_snake
+from dfs_generate.tools import to_pascal, tran, to_snake, to_camel
 
 
 def _pydantic_field(column, imports):
@@ -33,7 +33,7 @@ def _pydantic_field(column, imports):
 
 
 def _fast_crud_column(column):
-    name = column["COLUMN_NAME"]
+    name = to_camel(column["COLUMN_NAME"])
     title = column["COLUMN_COMMENT"] or name
     fmt = f"{name}: {{ title: '{title}', type: 'text', search: {{ show: true }}}}"
     return fmt

@@ -52,6 +52,19 @@ def to_snake(camel: str) -> str:
     return snake.lower()
 
 
+def to_camel(snake: str) -> str:
+    """Convert a snake_case string to camelCase.
+
+    Args:
+        snake: The string to convert.
+
+    Returns:
+        The converted camelCase string.
+    """
+    camel = to_pascal(snake)
+    return re.sub("(^_*[A-Z])", lambda m: m.group(1).lower(), camel)
+
+
 @dataclass
 class MySQLConf:
     host: str
