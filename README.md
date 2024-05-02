@@ -1,9 +1,11 @@
-# dfs-generate
+# dfs-generate [![codecov](https://codecov.io/gh/zy7y/dfs-generate/graph/badge.svg?token=ZTBA7CYTFC)](https://codecov.io/gh/zy7y/dfs-generate)
 通过已有数据库表，生成FastAPI接口的工具项目,最终目的为FastAPI使用者，减少代码; 项目启发 Mybatis 逆向工程、[pdmaner](https://gitee.com/robergroup/pdmaner)
 
-# 支持ORM
+# 已支持从数据库表生成
 - [x] SQLModel
 - [x] Tortoise ORM
+- [x] Vue
+- [x] FastAPI 增加、删除、分页查询、详情查询、更新接口
 
 # Generate Code
 [FastAPI SQLModel MySQL](docs/sqlmodel)
@@ -56,6 +58,8 @@ source venv/bin/activate
 pip install -r requirements.txt 
 ```
 ### 运行
+> 解决找不到模块问题
+> mac / linux `export PYTHONPATH=./`  windows `set PYTHONPATH=./`
 ```shell
 python dfs_generate/server.py
 ```
