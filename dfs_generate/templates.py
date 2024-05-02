@@ -357,7 +357,7 @@ Vue CRUD代码基于fast-crud，更多用法请查看其官方文档 http://fast
 <script lang="ts">
 import { defineComponent, onMounted } from "vue";
 import { useFs, OnExposeContext } from "@fast-crud/fast-crud";
-import createCrudOptions from "./curd";
+import createCrudOptions from "./crud";
 
 //此处为组件定义
 export default defineComponent({
