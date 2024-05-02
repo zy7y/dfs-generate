@@ -1,4 +1,9 @@
 # Change Log
+## Release v0.2.3  (2024-05-02)
+- #50 api.ts 请求头参数位置错误
+- #52 调整单测、接入覆盖率CI
+- #55 crud.ts 列名未小驼峰导致错误
+
 ## Release v0.2.2  (2024-05-01)
 - #28 基于[fast-crud](http://fast-crud.docmirror.cn/)生成`Vue`代码完整管理页面操作
 - #41 使用create-dmg完成macos安装包制作
