@@ -16,12 +16,23 @@ MOCK_COLUMNS = [
         "IS_NULLABLE": "NO",
         "COLUMN_KEY": "PRI",
         "COLUMN_COMMENT": "主键ID",
+        "CHARACTER_MAXIMUM_LENGTH": "",
+        "NUMERIC_PRECISION": "",
+        "NUMERIC_SCALE": "",
+        "COLUMN_DEFAULT": "",
+        "EXTRA": "",
     },
     {
         "COLUMN_NAME": "name",
-        "DATA_TYPE": "varchar(100)",
+        "DATA_TYPE": "varchar",
         "IS_NULLABLE": "YES",
         "COLUMN_COMMENT": "姓名",
+        "CHARACTER_MAXIMUM_LENGTH": "100",
+        "NUMERIC_PRECISION": "",
+        "NUMERIC_SCALE": "",
+        "COLUMN_DEFAULT": "",
+        "EXTRA": "",
+        "COLUMN_KEY": "",
     },
 ]
 
@@ -64,8 +75,11 @@ def test_tortoise_conversion_model(tortoise_conversion_fixture):
     """测试TortoiseConversion的model方法输出格式"""
     model_code = tortoise_conversion_fixture.model()
     assert "class Users(Model):" in model_code
-    assert "id = fields.Int(pk=True)" in model_code
-    assert "name = fields.CharField(max_length=100)" in model_code
+    assert 'id = fields.IntField(description="主键ID", pk=True)' in model_code
+    assert (
+        'name = fields.CharField(null=True, max_length=100, description="姓名")'
+        in model_code
+    )
 
 
 def test_pydantic_field():
@@ -79,7 +93,10 @@ def test_sqlmodel_field_repr():
     """测试_sqlmodel_field_repr函数的输出"""
     column = MOCK_COLUMNS[0]  # 使用id字段作为测试
     imports, field_code = set(), _sqlmodel_field_repr(column, set())
-    assert "id: Optional[int] = Field(nullable=False)" in field_code
+    assert (
+        'id: Optional[int] = Field(default=None,primary_key=True,description="主键ID")'
+        == field_code
+    )
     assert (
         "from datetime import datetime" not in imports
     )  # id字段不应触发默认时间戳逻辑
@@ -89,4 +106,7 @@ def test_tortoise_field_repr():
     """测试_tortoise_field_repr函数的输出"""
     column = MOCK_COLUMNS[1]
     field_code = _tortoise_field_repr(column)
-    assert "name = fields.CharField(max_length=100, description='姓名')" in field_code
+    assert (
+        'name = fields.CharField(null=True, max_length=100, description="姓名")'
+        == field_code
+    )
