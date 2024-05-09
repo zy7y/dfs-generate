@@ -1,6 +1,5 @@
 import os.path
 import platform
-import shutil
 import subprocess
 
 import pymysql
@@ -32,32 +31,9 @@ if sys.stdout is None:
 from dfs_generate.server import app
 
 
-def get_unused_port():
-    while True:
-        port = random.randint(1024, 65535)  # 端口范围一般为1024-65535
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            sock.bind(("localhost", port))
-            sock.close()
-            return port
-        except OSError:
-            pass
-
-
 import webview
-
-
-def desktop_client():
-    port = get_unused_port()
-    t = threading.Thread(target=app.run, kwargs={"port": port})
-    t.daemon = True
-    t.start()
-    webview.create_window("DFS代码生成", f"http://127.0.0.1:{port}")
-    webview.start()
-
-
-if __name__ == '__main__':
-    desktop_client()
+webview.create_window("DFS代码生成", app)
+webview.start()
     """
     with open(CLIENT_PY, "w", encoding="utf-8") as f:
         f.write(code)
