@@ -1,4 +1,8 @@
 # Change Log
+## Release v0.2.4  (2024-05-12)
+- #59 简化pywebview桌面端构建
+- #58 将curd修改为crud
+
 ## Release v0.2.3  (2024-05-02)
 - #50 api.ts 请求头参数位置错误
 - #52 调整单测、接入覆盖率CI
