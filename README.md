@@ -16,6 +16,10 @@
 
 > 使用过程中有疑问、或其他宝贵意见 -> [issues](https://github.com/zy7y/dfs-generate/issues)，如果你对这个项目感兴趣，欢迎加入共同实现，
 
+# 桌面端下载
+> 支持 Windows、MacOS
+[下载最新版本](https://github.com/zy7y/dfs-generate/releases/latest)
+
 # 源码运行
 <details>
 <summary>查看详情</summary>
