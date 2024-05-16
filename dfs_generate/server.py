@@ -10,7 +10,7 @@ from dfs_generate.tools import MySQLConf, MySQLHelper
 
 app = bottle.Bottle()
 
-CACHE: Dict[str, MySQLHelper] = {}
+CACHE: Dict[str, MySQLConf] = {}
 
 # 解决打包桌面程序static找不到的问题
 static_file_abspath = os.path.join(
@@ -51,8 +51,8 @@ def index():
 def connect():
     payload = bottle.request.json
     try:
-        conf = MySQLConf(**payload)
-        CACHE["connect"] = MySQLHelper(conf)
+        with MySQLHelper(MySQLConf(**payload)) as obj:
+            CACHE["conf"] = MySQLConf(**payload)
         return {"code": 20000, "msg": "ok", "data": None}
     except Exception as e:
         return {"code": 40000, "msg": str(e), "data": None}
@@ -60,20 +60,21 @@ def connect():
 
 @app.get("/tables")
 def tables():
-    if obj := CACHE.get("connect"):
-        like = bottle.request.query.get("tableName")
-        data = [
-            {"tableName": table, "key": table}
-            for table in obj.get_tables()
-            if like in table
-        ]
-        return {"code": 20000, "msg": "ok", "data": data}
-    return {"code": 40000, "msg": "error", "data": None}
+    like = bottle.request.query.get("tableName")
+    try:
+        with MySQLHelper(CACHE.get("conf")) as obj:
+            data = [
+                {"tableName": table, "key": table}
+                for table in obj.get_tables()
+                if like in table
+            ]
+            return {"code": 20000, "msg": "ok", "data": data}
+    except Exception as e:
+        return {"code": 40000, "msg": str(e), "data": None}
 
 
 @app.get("/codegen")
 def codegen():
-    obj = CACHE.get("connect")
     table = bottle.request.query.get("tableName")
     mode = bottle.request.query.get("mode")
     results = []
@@ -81,10 +82,13 @@ def codegen():
         _instance = SQLModelConversion
     else:
         _instance = TortoiseConversion
-
-    data = _instance(
-        table, obj.get_table_columns(table), obj.conf.get_db_uri()
-    ).gencode()
+    try:
+        with MySQLHelper(CACHE.get("conf")) as obj:
+            data = _instance(
+                table, obj.get_table_columns(table), obj.conf.get_db_uri()
+            ).gencode()
+    except Exception as e:
+        return {"code": 40000, "msg": str(e), "data": None}
 
     for k, v in data.items():
         if k.endswith("py"):

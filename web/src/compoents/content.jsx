@@ -102,13 +102,20 @@ const DFSContent = () => {
       body: localStorage.getItem("dbConf"),
     });
     const resData = await resConf.json();
+    if (resData.code === 40000) {
+      message.error(resData.msg);
+      return;
+    }
     console.log(resData, resConf);
   };
   useEffect(() => {
     if (localStorage.getItem("dbConf")) {
-      resetContentDB();
+      getTables();
+    } else {
+       message.info("welcome to use dfs-generate");
+      setModalOpen(true)
     }
-    getTables();
+
   }, []);
 
   // 搜索
