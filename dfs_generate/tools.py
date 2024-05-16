@@ -124,3 +124,9 @@ where c.TABLE_SCHEMA = %s
         self.cursor.execute(self.GET_TABLE_COLUMNS, [self.conf.db, table_name])
         rows = self.cursor.fetchall()
         return sorted(rows, key=lambda x: x["ORDINAL_POSITION"])
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
