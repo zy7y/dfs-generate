@@ -5,21 +5,20 @@ import schema
 from sqlmodel import Session, func, select
 
 
-def create(session: Session, obj_in: schema.SysMenu) -> model.SysMenu:
-    obj = model.SysMenu(**obj_in.model_dump(exclude_unset=True))
+def create(session: Session, obj_in: schema.Aerich) -> model.Aerich:
+    obj = model.Aerich(**obj_in.model_dump(exclude_unset=True))
     session.add(obj)
     session.commit()
     session.refresh(obj)
     return obj
 
 
-def query_by_id(session: Session, id: int) -> Optional[model.SysMenu]:
-    return session.get(model.SysMenu, id)
+def query_by_id(session: Session, id: int) -> Optional[model.Aerich]:
+    return session.get(model.Aerich, {'aerich_id': id})
 
 
-def update(
-    session: Session, id: int, obj_in: schema.SysMenu
-) -> Optional[model.SysMenu]:
+def update(session: Session, id: int,
+           obj_in: schema.Aerich) -> Optional[model.Aerich]:
     obj = query_by_id(session, id)
     if obj:
         for field, value in obj_in.model_dump(exclude_unset=True).items():
@@ -30,8 +29,8 @@ def update(
     return obj
 
 
-def delete_by_id(session: Session, id: int) -> Optional[model.SysMenu]:
-    obj = session.get(model.SysMenu, id)
+def delete_by_id(session: Session, id: int) -> Optional[model.Aerich]:
+    obj = query_by_id(session, id)
     if obj:
         session.delete(obj)
         session.commit()
@@ -40,17 +39,11 @@ def delete_by_id(session: Session, id: int) -> Optional[model.SysMenu]:
 
 def count(session: Session, **kwargs) -> int:
     return session.scalar(
-        select(func.count()).select_from(model.SysMenu).filter_by(**kwargs)
-    )
+        select(func.count()).select_from(model.Aerich).filter_by(**kwargs))
 
 
-def query_all_by_limit(
-    session: Session, page_number: int, page_size: int, **kwargs
-) -> List[model.SysMenu]:
-    stmt = (
-        select(model.SysMenu)
-        .filter_by(**kwargs)
-        .offset((page_number - 1) * page_size)
-        .limit(page_size)
-    )
+def query_all_by_limit(session: Session, page_number: int, page_size: int,
+                       **kwargs) -> List[model.Aerich]:
+    stmt = select(model.Aerich).filter_by(**kwargs).offset(
+        (page_number - 1) * page_size).limit(page_size)
     return session.exec(stmt).all()

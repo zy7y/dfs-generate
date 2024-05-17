@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel, Field
@@ -37,18 +36,9 @@ class PageParam(BaseModel):
     model_config = {"alias_generator": to_camel, "populate_by_name": True}
 
 
-class SysMenu(BaseModel):
-    id: Optional[int] = Field(None, description='主键')
-    status: Optional[int] = Field(None, description='状态 1有效 9 删除 5选中')
-    created: Optional[datetime] = Field(None, description='创建时间')
-    modified: Optional[datetime] = Field(None, description='更新时间')
-    name: Optional[str] = Field(None, description='名称')
-    icon: Optional[str] = Field(None, description='菜单图标')
-    path: Optional[str] = Field(None, description='菜单url')
-    type: Optional[int] = Field(None, description='菜单类型 0目录 1组件 2按钮 3数据')
-    component: Optional[str] = Field(None, description='组件地址')
-    pid: Optional[int] = Field(None, description='父id')
-    identifier: Optional[str] = Field(None, description='权限标识 user:add')
-    api: Optional[str] = Field(None, description='接口地址')
-    method: Optional[str] = Field(None, description='接口请求方式')
+class Aerich(BaseModel):
+    aerich_id: Optional[int] = None
+    version: Optional[str] = None
+    app: Optional[str] = None
+    content: Optional[dict] = None
     model_config = {"alias_generator": to_camel, "populate_by_name": True}

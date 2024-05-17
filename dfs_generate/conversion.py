@@ -44,6 +44,7 @@ class Conversion:
         self.table_name = table_name
         self.columns = columns
         self.uri = uri
+        self.pk = "{'id': id}"
 
     @property
     def table(self):
@@ -193,6 +194,8 @@ class SQLModelConversion(Conversion):
         fields = []
         for column in self.columns:
             field = _sqlmodel_field_repr(column, imports)
+            if column["COLUMN_KEY"] == "PRI":
+                self.pk = "{" + "'" + column["COLUMN_NAME"] + "': id}"
             if "    " + field not in fields:
                 fields.append("    " + field)
         return "\n".join(imports) + "\n\n" + head + "\n" + "\n".join(fields)
@@ -204,7 +207,7 @@ class SQLModelConversion(Conversion):
             "import model",
             "import schema",
         }
-        content = SQLMODEL_DAO.format(table=self.table)
+        content = SQLMODEL_DAO.format(table=self.table, pk=self.pk)
         return "\n".join(imports) + "\n\n" + content
 
     def router(self):
@@ -273,6 +276,8 @@ class TortoiseConversion(Conversion):
         fields = []
         for column in self.columns:
             field = _tortoise_field_repr(column)
+            if column["COLUMN_KEY"] == "PRI":
+                self.pk = f'{column["COLUMN_NAME"]}=id'
             if "    " + field not in fields:
                 fields.append("    " + field)
         return (
@@ -286,7 +291,7 @@ class TortoiseConversion(Conversion):
 
     def dao(self):
         imports = {"from typing import List, Optional", "import model", "import schema"}
-        content = TORTOISE_DAO.format(table=self.table)
+        content = TORTOISE_DAO.format(table=self.table, pk=self.pk)
         return "\n".join(imports) + "\n\n" + content
 
     def main(self):
