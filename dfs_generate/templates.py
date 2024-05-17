@@ -51,7 +51,7 @@ def create(session: Session, obj_in: schema.{table}) -> model.{table}:
     return obj
 
 def query_by_id(session: Session, id: int) -> Optional[model.{table}]:
-    return session.get(model.{table}, id)
+    return session.get(model.{table}, {pk})
 
 def update(session: Session, id: int, obj_in: schema.{table}) -> Optional[model.{table}]:
     obj = query_by_id(session, id)
@@ -168,7 +168,7 @@ async def create(obj_in: schema.{table}) -> model.{table}:
     return obj
 
 async def query_by_id(id: int) -> Optional[model.{table}]:
-    return await model.{table}.get_or_none(id=id)
+    return await model.{table}.get_or_none({pk})
 
 async def update(id: int, obj_in: schema.{table}) -> Optional[model.{table}]:
     obj= await query_by_id(id)
