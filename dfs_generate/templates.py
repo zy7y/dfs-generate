@@ -64,7 +64,7 @@ def update(session: Session, id: int, obj_in: schema.{table}) -> Optional[model.
     return obj
 
 def delete_by_id(session: Session, id: int) -> Optional[model.{table}]:
-    obj = session.get(model.{table}, id)
+    obj = query_by_id(session, id)
     if obj:
         session.delete(obj)
         session.commit()

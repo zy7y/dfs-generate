@@ -30,7 +30,7 @@ def update(session: Session, id: int,
 
 
 def delete_by_id(session: Session, id: int) -> Optional[model.Aerich]:
-    obj = session.get(model.Aerich, id)
+    obj = query_by_id(session, id)
     if obj:
         session.delete(obj)
         session.commit()
