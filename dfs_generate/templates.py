@@ -125,8 +125,12 @@ SQLMODEL_DB = """
 from sqlmodel import create_engine
 
 db_uri = "{uri}"
-
-engine = create_engine(db_uri)
+# 不使用连接池
+engine = create_engine(db_uri, pool_pre_ping=True, pool_recycle=-1)
+# 设置sqlalchemy 回收链接的时间为10分钟 
+# engine = create_engine(db_uri, pool_recycle=600)
+# 在每次使用连接前都会进行ping操作，并且连接的最大空闲时间为30分钟（1800秒）后才会被回收
+# engine = create_engine(db_uri, pool_pre_ping=True,pool_recycle=1800)
 """
 
 SQLMODEL_MAIN = (
@@ -153,7 +157,7 @@ app.include_router({router_name})
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("main:app", reload=True, port=5000)
+    uvicorn.run("__main__:app", reload=False, port=5000)
 """
     % DOC_DESC
 )
