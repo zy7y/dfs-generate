@@ -1,16 +1,15 @@
 import os
-from typing import Dict
 
 import bottle
 import isort
 from yapf.yapflib.yapf_api import FormatCode
 
 from dfs_generate.conversion import SQLModelConversion, TortoiseConversion
-from dfs_generate.tools import MySQLConf, MySQLHelper
+from dfs_generate.tools import Cache, MySQLConf, MySQLHelper
 
 app = bottle.Bottle()
-
-CACHE: Dict[str, MySQLConf] = {}
+cache = Cache()
+cache.start()
 
 # 解决打包桌面程序static找不到的问题
 static_file_abspath = os.path.join(
@@ -47,22 +46,30 @@ def index():
     return html_content
 
 
-@app.post("/conf")
+# 连接数据库
+@app.get("/con")
 def connect():
+    if cache.get():
+        return {"code": 20000, "msg": "ok", "data": cache.get()}
+    return {"code": 40000, "msg": "error", "data": None}
+
+
+@app.post("/conf")
+def configure():
     payload = bottle.request.json
     try:
-        with MySQLHelper(MySQLConf(**payload)) as obj:
-            CACHE["conf"] = MySQLConf(**payload)
+        with MySQLHelper(MySQLConf(**payload)):
+            cache.set(**MySQLConf(**payload).json())
         return {"code": 20000, "msg": "ok", "data": None}
     except Exception as e:
         return {"code": 40000, "msg": str(e), "data": None}
 
 
 @app.get("/tables")
-def tables():
+def get_tables():
     like = bottle.request.query.get("tableName")
     try:
-        with MySQLHelper(CACHE.get("conf")) as obj:
+        with MySQLHelper(MySQLConf(**cache.get())) as obj:
             data = [
                 {"tableName": table, "key": table}
                 for table in obj.get_tables()
@@ -83,9 +90,9 @@ def codegen():
     else:
         _instance = TortoiseConversion
     try:
-        with MySQLHelper(CACHE.get("conf")) as obj:
+        with MySQLHelper(MySQLConf(**cache.get())) as obj:
             data = _instance(
-                table, obj.get_table_columns(table), obj.conf.get_db_uri()
+                table, obj.get_table_columns(table), obj.conf.db_uri
             ).gencode()
     except Exception as e:
         return {"code": 40000, "msg": str(e), "data": None}

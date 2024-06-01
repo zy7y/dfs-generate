@@ -1,5 +1,8 @@
+import os
 import re
-from dataclasses import dataclass, asdict
+import sqlite3
+import threading
+from dataclasses import asdict, dataclass
 
 import pymysql
 
@@ -74,7 +77,8 @@ class MySQLConf:
     port: int = 3306
     charset: str = "utf8"
 
-    def get_db_uri(self):
+    @property
+    def db_uri(self):
         return f"mysql+pymysql://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}?charset={self.charset}"
 
     def json(self):
@@ -102,13 +106,6 @@ where c.TABLE_SCHEMA = %s
         )
         self.cursor = self.conn.cursor()
 
-    def set_conn(self, conf: MySQLConf):
-        self.conf = conf
-        self.conn = pymysql.connect(
-            **self.conf.json(), cursorclass=pymysql.cursors.DictCursor
-        )
-        self.cursor = self.conn.cursor()
-
     def close(self):
         self.cursor.close()
         self.conn.close()
@@ -130,3 +127,76 @@ where c.TABLE_SCHEMA = %s
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+
+def get_cache_directory():
+    """
+    获取适用于不同操作系统的缓存目录路径。
+    """
+    system = os.name
+    if system == "posix":  # Linux, macOS, Unix
+        return os.path.expanduser("~/.cache")
+    elif system == "nt":  # Windows
+        return os.path.expandvars(r"%LOCALAPPDATA%")
+    else:
+        return "."  # 不支持的操作系统
+
+
+class Cache:
+    def __init__(self):
+        self.db_path = os.path.join(get_cache_directory(), "dfs-generate", ".data.db")
+        self._local = threading.local()  # 使用线程局部存储
+
+    def _get_connection(self):
+        if not hasattr(self._local, "conn"):
+            self._local.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        return self._local.conn
+
+    def _close_connection(self):
+        if hasattr(self._local, "conn"):
+            self._local.conn.close()
+            del self._local.conn
+
+    def start(self):
+        if not os.path.exists(self.db_path):
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            create_table_sql = """
+                CREATE TABLE IF NOT EXISTS conf (
+                    id INTEGER PRIMARY KEY,
+                    user TEXT NOT NULL,
+                    password TEXT NOT NULL,
+                    host TEXT NOT NULL,
+                    port INT NOT NULL,
+                    db TEXT NOT NULL,
+                    charset TEXT NOT NULL
+                );
+            """
+            cursor.execute(create_table_sql)
+            conn.commit()
+            conn.close()
+
+    def set(self, user, password, host, port, db, charset):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            insert_sql = """
+                INSERT INTO conf (user, password, host, port, db, charset) VALUES (?, ?, ?, ?, ?, ?)
+            """
+            cursor.execute(insert_sql, (user, password, host, port, db, charset))
+            conn.commit()
+
+    def get(self):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            query_sql = """
+                SELECT user, password, host, port, db, charset FROM conf ORDER BY id DESC LIMIT 1
+            """
+            cursor.execute(query_sql)
+            result = cursor.fetchone()
+            if result:
+                keys = ["user", "password", "host", "port", "db", "charset"]
+                return dict(zip(keys, result))
+            return None
+
+    def cleanup(self):
+        self._close_connection()
