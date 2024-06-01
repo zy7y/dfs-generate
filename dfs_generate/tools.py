@@ -1,7 +1,6 @@
 import os
 import re
 import sqlite3
-import threading
 from dataclasses import asdict, dataclass
 
 import pymysql
@@ -143,41 +142,39 @@ def get_cache_directory():
 
 
 class Cache:
+    system = os.name
+
     def __init__(self):
-        self.db_path = os.path.join(get_cache_directory(), "dfs-generate", ".data.db")
-        self._local = threading.local()  # 使用线程局部存储
-
-    def _get_connection(self):
-        if not hasattr(self._local, "conn"):
-            self._local.conn = sqlite3.connect(self.db_path, check_same_thread=False)
-        return self._local.conn
-
-    def _close_connection(self):
-        if hasattr(self._local, "conn"):
-            self._local.conn.close()
-            del self._local.conn
+        if self.system == "posix":  # Linux, macOS, Unix
+            cache_dir = os.path.expanduser("~/.cache")
+        elif self.system == "nt":  # Windows
+            cache_dir = os.path.expandvars(r"%LOCALAPPDATA%")
+        else:
+            cache_dir = "."
+        app_cache = os.path.join(cache_dir, "dfs-generate")
+        if not os.path.isdir(app_cache):
+            os.mkdir(app_cache)
+        self.db_path = os.path.join(app_cache, ".data.db")
 
     def start(self):
-        if not os.path.exists(self.db_path):
-            conn = sqlite3.connect(self.db_path)
+        create_table_sql = """
+            CREATE TABLE IF NOT EXISTS conf (
+                id INTEGER PRIMARY KEY,
+                user TEXT NOT NULL,
+                password TEXT NOT NULL,
+                host TEXT NOT NULL,
+                port INT NOT NULL,
+                db TEXT NOT NULL,
+                charset TEXT NOT NULL
+            );
+        """
+        with sqlite3.connect(self.db_path, check_same_thread=False) as conn:
             cursor = conn.cursor()
-            create_table_sql = """
-                CREATE TABLE IF NOT EXISTS conf (
-                    id INTEGER PRIMARY KEY,
-                    user TEXT NOT NULL,
-                    password TEXT NOT NULL,
-                    host TEXT NOT NULL,
-                    port INT NOT NULL,
-                    db TEXT NOT NULL,
-                    charset TEXT NOT NULL
-                );
-            """
             cursor.execute(create_table_sql)
             conn.commit()
-            conn.close()
 
     def set(self, user, password, host, port, db, charset):
-        with self._get_connection() as conn:
+        with sqlite3.connect(self.db_path, check_same_thread=False) as conn:
             cursor = conn.cursor()
             insert_sql = """
                 INSERT INTO conf (user, password, host, port, db, charset) VALUES (?, ?, ?, ?, ?, ?)
@@ -186,7 +183,7 @@ class Cache:
             conn.commit()
 
     def get(self):
-        with self._get_connection() as conn:
+        with sqlite3.connect(self.db_path, check_same_thread=False) as conn:
             cursor = conn.cursor()
             query_sql = """
                 SELECT user, password, host, port, db, charset FROM conf ORDER BY id DESC LIMIT 1
@@ -197,6 +194,3 @@ class Cache:
                 keys = ["user", "password", "host", "port", "db", "charset"]
                 return dict(zip(keys, result))
             return None
-
-    def cleanup(self):
-        self._close_connection()
