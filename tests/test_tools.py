@@ -49,7 +49,7 @@ def test_mysqlconf_get_db_uri():
         host="localhost", user="test_user", password="secure_pwd", db="test_db"
     )
     assert (
-        conf.get_db_uri()
+        conf.db_uri
         == "mysql+pymysql://test_user:secure_pwd@localhost:3306/test_db?charset=utf8"
     )
 

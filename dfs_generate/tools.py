@@ -1,5 +1,7 @@
+import os
 import re
-from dataclasses import dataclass, asdict
+import sqlite3
+from dataclasses import asdict, dataclass
 
 import pymysql
 
@@ -74,7 +76,8 @@ class MySQLConf:
     port: int = 3306
     charset: str = "utf8"
 
-    def get_db_uri(self):
+    @property
+    def db_uri(self):
         return f"mysql+pymysql://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}?charset={self.charset}"
 
     def json(self):
@@ -102,13 +105,6 @@ where c.TABLE_SCHEMA = %s
         )
         self.cursor = self.conn.cursor()
 
-    def set_conn(self, conf: MySQLConf):
-        self.conf = conf
-        self.conn = pymysql.connect(
-            **self.conf.json(), cursorclass=pymysql.cursors.DictCursor
-        )
-        self.cursor = self.conn.cursor()
-
     def close(self):
         self.cursor.close()
         self.conn.close()
@@ -130,3 +126,71 @@ where c.TABLE_SCHEMA = %s
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+
+def get_cache_directory():
+    """
+    获取适用于不同操作系统的缓存目录路径。
+    """
+    system = os.name
+    if system == "posix":  # Linux, macOS, Unix
+        return os.path.expanduser("~/.cache")
+    elif system == "nt":  # Windows
+        return os.path.expandvars(r"%LOCALAPPDATA%")
+    else:
+        return "."  # 不支持的操作系统
+
+
+class Cache:
+    system = os.name
+
+    def __init__(self):
+        if self.system == "posix":  # Linux, macOS, Unix
+            cache_dir = os.path.expanduser("~/.cache")
+        elif self.system == "nt":  # Windows
+            cache_dir = os.path.expandvars(r"%LOCALAPPDATA%")
+        else:
+            cache_dir = "."
+        app_cache = os.path.join(cache_dir, "dfs-generate")
+        if not os.path.isdir(app_cache):
+            os.mkdir(app_cache)
+        self.db_path = os.path.join(app_cache, ".data.db")
+
+    def start(self):
+        create_table_sql = """
+            CREATE TABLE IF NOT EXISTS conf (
+                id INTEGER PRIMARY KEY,
+                user TEXT NOT NULL,
+                password TEXT NOT NULL,
+                host TEXT NOT NULL,
+                port INT NOT NULL,
+                db TEXT NOT NULL,
+                charset TEXT NOT NULL
+            );
+        """
+        with sqlite3.connect(self.db_path, check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute(create_table_sql)
+            conn.commit()
+
+    def set(self, user, password, host, port, db, charset):
+        with sqlite3.connect(self.db_path, check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            insert_sql = """
+                INSERT INTO conf (user, password, host, port, db, charset) VALUES (?, ?, ?, ?, ?, ?)
+            """
+            cursor.execute(insert_sql, (user, password, host, port, db, charset))
+            conn.commit()
+
+    def get(self):
+        with sqlite3.connect(self.db_path, check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            query_sql = """
+                SELECT user, password, host, port, db, charset FROM conf ORDER BY id DESC LIMIT 1
+            """
+            cursor.execute(query_sql)
+            result = cursor.fetchone()
+            if result:
+                keys = ["user", "password", "host", "port", "db", "charset"]
+                return dict(zip(keys, result))
+            return None

@@ -7,39 +7,30 @@ import {
   Input,
   InputNumber,
   message,
-  Affix,
-} from "antd";
-import { useEffect, useState } from "react";
+  Affix
+} from 'antd'
+import { useEffect, useState } from 'react'
 import {
   CodepenOutlined,
   SettingOutlined,
-  RedditOutlined,
-} from "@ant-design/icons";
-import CodeGenerate from "../compoents/codegen";
-import { host } from "../conf";
+  RedditOutlined
+} from '@ant-design/icons'
+import CodeGenerate from '../compoents/codegen'
+import { host } from '../conf'
 
-const changDBFormRules = [{ required: true, message: "该项必须填写" }];
+const changDBFormRules = [{ required: true, message: '该项必须填写' }]
 
 // 修改配置组件
-const ChangeDB = ({ onDbFinsh }) => {
+const ChangeDB = ({ onDbFinsh, initialValues }) => {
   return (
     <Form
       onFinish={(values) => onDbFinsh(values)}
-      initialValues={JSON.parse(
-        localStorage.getItem("dbConf") ??
-          JSON.stringify({
-            host: "127.0.0.1",
-            port: 3306,
-            passowrd: "123456",
-            user: "root",
-            db: "mini-rbac",
-          })
-      )}
+      initialValues={initialValues}
     >
       <Form.Item
         name="host"
         rules={changDBFormRules}
-        initialValue={"127.0.0.1"}
+        initialValue={'127.0.0.1'}
       >
         <Input placeholder="主机地址如：127.0.0.1"></Input>
       </Form.Item>
@@ -49,7 +40,7 @@ const ChangeDB = ({ onDbFinsh }) => {
       <Form.Item
         name="password"
         rules={changDBFormRules}
-        initialValue={"123456"}
+        initialValue={'123456'}
       >
         <Input.Password placeholder="密码如：123456"></Input.Password>
       </Form.Item>
@@ -65,108 +56,101 @@ const ChangeDB = ({ onDbFinsh }) => {
         </Button>
       </Form.Item>
     </Form>
-  );
-};
+  )
+}
 
 const columns = [
   {
-    title: "表名",
-    dataIndex: "tableName",
+    title: '表名',
+    dataIndex: 'tableName'
   },
   {
-    title: "描述",
-    dataIndex: "tableComment",
-  },
-];
+    title: '描述',
+    dataIndex: 'tableComment'
+  }
+]
 
 const DFSContent = () => {
-  const [tableData, setTableData] = useState([]);
-  const [selectTable, setSelectTable] = useState([]);
+  const [tableData, setTableData] = useState([])
+  const [selectTable, setSelectTable] = useState([])
+  const [initialValues, setInitialValues] = useState({})
 
-  const getTables = async (data = "") => {
-    const res = await fetch(`${host}/tables?tableName=${data}`);
-    const resData = await res.json();
+  const getTables = async (data = '') => {
+    const res = await fetch(`${host}/tables?tableName=${data}`)
+    const resData = await res.json()
     if (resData.code === 40000) {
-      message.error(resData.msg);
-      return;
+      message.error(resData.msg)
+      return
     }
-    setTableData(resData.data);
-  };
+    setTableData(resData.data)
+  }
 
-  const resetContentDB = async () => {
-    const resConf = await fetch(`${host}/conf`, {
-      method: "post",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: localStorage.getItem("dbConf"),
-    });
-    const resData = await resConf.json();
+  // 获取数据链接
+  const getConnect = async () => {
+    const res = await fetch(`${host}/con`)
+    const resData = await res.json()
     if (resData.code === 40000) {
-      message.error(resData.msg);
-      return;
-    }
-    console.log(resData, resConf);
-  };
-  useEffect(() => {
-    if (localStorage.getItem("dbConf")) {
-      getTables();
-    } else {
-       message.info("welcome to use dfs-generate");
+      message.info('welcome to use dfs-generate')
       setModalOpen(true)
+      return
+    } else {
+      setInitialValues(resData.data)
+      await getTables()
     }
-
-  }, []);
+  }
+  useEffect(() => {
+    getConnect()
+  }, [])
 
   // 搜索
   const onSearch = async (values) => {
-    await getTables(values?.tableName);
-  };
+    await getTables(values?.tableName)
+  }
 
   // 选中表
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(
         `selectedRowKeys: ${selectedRowKeys}`,
-        "selectedRows: ",
+        'selectedRows: ',
         selectedRows
-      );
-      setSelectTable(selectedRows.map((e) => e.tableName));
-    },
-  };
+      )
+      setSelectTable(selectedRows.map((e) => e.tableName))
+    }
+  }
 
   // 修改连接
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false)
 
   const onDbFinsh = async (values) => {
-    localStorage.setItem("dbConf", JSON.stringify(values));
     const res = await fetch(`${host}/conf`, {
-      method: "post",
+      method: 'post',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(values),
-    });
-    const resBody = await res.json();
+      body: JSON.stringify(values)
+    })
+    const resBody = await res.json()
     if (resBody.code === 40000) {
-      message.error(resBody.msg);
+      message.error(resBody.msg)
     } else {
-      message.success(resBody.msg);
-      setModalOpen(false);
-      await getTables();
+      message.success(resBody.msg)
+      setModalOpen(false)
+      setInitialValues(values)
+      await getTables()
     }
-  };
+  }
 
   // 生成代码
-  const [openDrawer, setOpenDrawer] = useState(false);
-  const [mode, setMode] = useState("sqlmodel");
+  const [openDrawer, setOpenDrawer] = useState(false)
+  const [mode, setMode] = useState('sqlmodel')
 
   return (
     <div>
       <Affix offsetTop={10}>
         <Form layout="inline" onFinish={onSearch}>
-          <Form.Item name="tableName" initialValue={""}>
+          <Form.Item name="tableName" initialValue={''}>
             <Input placeholder="搜索表名" />
           </Form.Item>
           <Form.Item>
@@ -177,8 +161,8 @@ const DFSContent = () => {
           <Form.Item>
             <Button
               onClick={() => {
-                setOpenDrawer(true);
-                setMode("sqlmodel");
+                setOpenDrawer(true)
+                setMode('sqlmodel')
               }}
               disabled={!selectTable.length}
             >
@@ -189,8 +173,8 @@ const DFSContent = () => {
           <Form.Item>
             <Button
               onClick={() => {
-                setOpenDrawer(true);
-                setMode("tortoise");
+                setOpenDrawer(true)
+                setMode('tortoise')
               }}
               disabled={!selectTable.length}
             >
@@ -208,10 +192,10 @@ const DFSContent = () => {
       </Affix>
 
       <Table
-        style={{ marginTop: "20px" }}
+        style={{ marginTop: '20px' }}
         rowSelection={{
-          type: "checkbox",
-          ...rowSelection,
+          type: 'checkbox',
+          ...rowSelection
         }}
         pagination={false}
         dataSource={tableData}
@@ -225,12 +209,12 @@ const DFSContent = () => {
         destroyOnClose={true}
         onCancel={() => setModalOpen(false)}
       >
-        <ChangeDB onDbFinsh={onDbFinsh} />
+        <ChangeDB onDbFinsh={onDbFinsh} initialValues={initialValues} />
       </Modal>
 
       <Drawer
         styles={{
-          body: { padding: "0px" },
+          body: { padding: '0px' }
         }}
         width="75%"
         placement="right"
@@ -243,7 +227,7 @@ const DFSContent = () => {
         <CodeGenerate tables={selectTable} mode={mode} />
       </Drawer>
     </div>
-  );
-};
+  )
+}
 
-export default DFSContent;
+export default DFSContent
