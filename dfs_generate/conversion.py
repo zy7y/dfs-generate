@@ -12,6 +12,7 @@ from dfs_generate.templates import (
     VUE_API_TS,
     VUE_INDEX_VUE,
     VUE_CRUD_TS,
+    REACT_CRUD_TSX
 )
 from dfs_generate.tools import to_pascal, tran, to_snake, to_camel
 
@@ -38,6 +39,11 @@ def _fast_crud_column(column):
     fmt = f"{name}: {{ title: '{title}', type: 'text', search: {{ show: true }}}}"
     return fmt
 
+def _antd_crud_column(column):
+    name = to_camel(column["COLUMN_NAME"])
+    title = column["COLUMN_COMMENT"] or name
+    fmt = f"{{ title: '{title}', dataIndex: '{name}', key: '{name}', supportSearch: true}}"
+    return fmt
 
 class Conversion:
     def __init__(self, table_name, columns, uri):
@@ -105,7 +111,14 @@ class Conversion:
     def vue_index_vue(self):
         return VUE_INDEX_VUE % self.table
 
+    def react_crud_tsx(self):
+        columns = (
+                "[" + ",".join(_antd_crud_column(column) for column in self.columns) + "]"
+        )
+        return REACT_CRUD_TSX % (self.table, columns)
+
     def gencode(self):
+        self.react_crud_tsx()
         return {
             "model.py": self.model(),
             "dao.py": self.dao(),
@@ -115,6 +128,7 @@ class Conversion:
             "api.ts": self.vue_api_ts(),
             "crud.ts": self.vue_crud_ts(),
             "index.vue": self.vue_index_vue(),
+            "react_curd.tsx": self.react_crud_tsx()
         }
 
 

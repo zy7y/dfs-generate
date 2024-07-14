@@ -6,7 +6,7 @@ DOC_DESC = """
 
 支持ORM：[SQLModel](https://sqlmodel.tiangolo.com/)、[Tortoise ORM](https://tortoise.github.io/)
 
-支持前端: [Vue](https://cn.vuejs.org/)
+支持前端: [Vue](https://cn.vuejs.org/)、[React](https://react.dev/)
 """
 
 RESPONSE_SCHEMA = """
@@ -270,6 +270,7 @@ VUE_CRUD_TS = """
  * dfs-generate 生成FastAPI Tortoise ORM / SQLModel、Vue3 CRUD代码
  * dfs-generate Github: https://github.com/zy7y/dfs-generate
  * Vue CRUD代码基于fast-crud，更多用法请查看其官方文档 http://fast-crud.docmirror.cn/ 
+ * @fast-crud/fast-crud": "^1.21.1"
  */
 import { CreateCrudOptionsProps, CreateCrudOptionsRet, dict } from "@fast-crud/fast-crud";
 import { addRequest, delRequest, editRequest, pageRequest } from "./api";
@@ -296,20 +297,18 @@ VUE_API_TS = """
  * dfs-generate Github: https://github.com/zy7y/dfs-generate
  * Vue CRUD代码基于fast-crud，更多用法请查看其官方文档 http://fast-crud.docmirror.cn/
  */
-import { AddReq, DelReq, EditReq, UserPageQuery, UserPageRes } from "@fast-crud/fast-crud";
+import type { AddReq, DelReq, EditReq, UserPageQuery, UserPageRes } from "@fast-crud/fast-crud";
 import axios from "axios";
 
 const url = "http://127.0.1:5000/%s";
 
 export const pageRequest = async (query: UserPageQuery): Promise<UserPageRes> => {
-  const { limit, offset } = query.page;
-  const pageNumber = offset / limit + 1;
-  const pageSize = limit;
+  const { currentPage, pageNumber } = query.page;
   const res = await axios.get(url, {
     params: {
       pageNumber,
-      pageSize,
-      ...query.query
+      pageSize: currentPage,
+      ...query.form
     }
   });
   return {
@@ -378,4 +377,100 @@ export default defineComponent({
   }
 });
 </script>
+"""
+
+REACT_CRUD_TSX = """
+/**
+ * dfs-generate 生成FastAPI Tortoise ORM / SQLModel、React CRUD代码
+ * dfs-generate Github: https://github.com/zy7y/dfs-generate
+ * React CRUD代码基于antd-crud，更多用法请查看其官方文档 https://gitee.com/antdadmin/antd-crud
+ * @codeflex/antd-crud: "^1.0.6",
+ */
+
+import AntdCrud, { Actions, ColumnsConfig } from "@codeflex/antd-crud";
+import { message } from "antd"
+import axios from "axios";
+import { useState } from "react";
+
+const BASEURL = "http://127.0.0.1:5000/%s"
+
+const handleUpdate = async (id: number, data: any) => {
+    const res = await axios.patch(BASEURL + "/" + id, data)
+    message.success("更新成功")
+}
+const handleCreate = async (data: any) => {
+    const res = await axios.post(BASEURL, data)
+    message.success("创建成功")
+}
+
+const handleDelete = async (id: number) => {
+    const res = await axios.delete(BASEURL + "/" + id)
+    message.success("删除成功")
+}
+export default function () {
+
+    const [state, setState] = useState({
+        data: [],
+        pageNumber: 1,
+        pageSize: 10,
+        total: 0,
+    })
+
+    const columns: ColumnsConfig<any> = %s
+
+
+    const actions: Actions<any> = {
+        onCreate: async (account) => {
+            await handleCreate(account)
+            await getPageData({})
+        },
+        onDelete: async (account) => {
+            await handleDelete(account.id)
+            await getPageData({})
+
+        },
+        onUpdate: async (account) => {
+            console.log(account, "update")
+            await handleUpdate(account.id, account)
+            await getPageData({})
+
+        },
+        onFetchList: async (currentPage, pageSize, totalPage, searchParams, sortKey, sortType) => {
+            setState({
+                ...state,
+                pageNumber: currentPage,
+                pageSize
+            })
+            await getPageData({
+                pageSize,
+                pageNumber: currentPage,
+                ...(searchParams ?? {}),
+            })
+        },
+
+        onDeleteBatch: async (rows) => {
+            message.warning("暂不支持批量删除")
+        },
+
+    };
+
+    const getPageData = async (params: {}) => {
+        const res = await axios.get(BASEURL, {params})
+        setState({
+            ...res.data
+        })
+    }
+
+
+    return (
+        <AntdCrud
+            columns={columns}
+            dataSource={state.data}
+            actions={actions}
+            pageNumber={state.pageNumber}
+            pageSize={state.pageSize}
+            totalRow={state.total}
+        />
+    )
+}
 """

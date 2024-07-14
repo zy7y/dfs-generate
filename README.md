@@ -4,7 +4,7 @@
 # 已支持从数据库表生成
 - [x] SQLModel
 - [x] Tortoise ORM
-- [x] Vue
+- [x] Vue、React
 - [x] FastAPI 增加、删除、分页查询、详情查询、更新接口
 
 # Generate Code
