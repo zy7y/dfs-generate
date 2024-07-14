@@ -1,4 +1,8 @@
 # Change Log
+## Release v0.2.7  (2024-07-14)
+- #29 基于[antd-crud](https://gitee.com/antdadmin/antd-crud)生成`React`代码完整管理页面操作
+- 增加`fast-crud`版本说明（需安装指定版本、否则可能出现不兼容）
+
 ## Release v0.2.6  (2024-06-01)
 - #68 修复每次打开需要配置链接
 
