@@ -6,6 +6,8 @@ from dfs_generate.conversion import (
     _pydantic_field,
     _sqlmodel_field_repr,
     _tortoise_field_repr,
+    _fast_crud_column,
+    _antd_crud_column
 )
 
 # 假设的列数据，用于模拟从数据库获取的信息
@@ -77,8 +79,8 @@ def test_tortoise_conversion_model(tortoise_conversion_fixture):
     assert "class Users(Model):" in model_code
     assert 'id = fields.IntField(description="主键ID", pk=True)' in model_code
     assert (
-        'name = fields.CharField(null=True, max_length=100, description="姓名")'
-        in model_code
+            'name = fields.CharField(null=True, max_length=100, description="姓名")'
+            in model_code
     )
 
 
@@ -94,11 +96,11 @@ def test_sqlmodel_field_repr():
     column = MOCK_COLUMNS[0]  # 使用id字段作为测试
     imports, field_code = set(), _sqlmodel_field_repr(column, set())
     assert (
-        'id: Optional[int] = Field(default=None,primary_key=True,description="主键ID")'
-        == field_code
+            'id: Optional[int] = Field(default=None,primary_key=True,description="主键ID")'
+            == field_code
     )
     assert (
-        "from datetime import datetime" not in imports
+            "from datetime import datetime" not in imports
     )  # id字段不应触发默认时间戳逻辑
 
 
@@ -107,6 +109,30 @@ def test_tortoise_field_repr():
     column = MOCK_COLUMNS[1]
     field_code = _tortoise_field_repr(column)
     assert (
-        'name = fields.CharField(null=True, max_length=100, description="姓名")'
-        == field_code
+            'name = fields.CharField(null=True, max_length=100, description="姓名")'
+            == field_code
     )
+
+
+@pytest.mark.parametrize("column_data,expected", [
+    ({"COLUMN_NAME": "user_name", "COLUMN_COMMENT": "User's Name"},
+     "userName: { title: 'User's Name', type: 'text', search: { show: true }}"),
+    ({"COLUMN_NAME": "is_active", "COLUMN_COMMENT": ""},
+     "isActive: { title: 'isActive', type: 'text', search: { show: true }}"),
+    ({"COLUMN_NAME": "last_login_dt", "COLUMN_COMMENT": "Last Login Date & Time"},
+     "lastLoginDt: { title: 'Last Login Date & Time', type: 'text', search: { show: true }}"),
+])
+def test_fast_crud_column(column_data, expected):
+    assert _fast_crud_column(column_data) == expected
+
+
+@pytest.mark.parametrize("column_data,expected", [
+    ({"COLUMN_NAME": "user_name", "COLUMN_COMMENT": "User's Name"},
+     "{ title: 'User's Name', dataIndex: 'userName', key: 'userName', supportSearch: true}"),
+    ({"COLUMN_NAME": "is_active", "COLUMN_COMMENT": ""},
+     "{ title: 'isActive', dataIndex: 'isActive', key: 'isActive', supportSearch: true}"),
+    ({"COLUMN_NAME": "last_login_dt", "COLUMN_COMMENT": "Last Login Date & Time"},
+     "{ title: 'Last Login Date & Time', dataIndex: 'lastLoginDt', key: 'lastLoginDt', supportSearch: true}"),
+])
+def test_antd_crud_column(column_data, expected):
+    assert _antd_crud_column(column_data) == expected

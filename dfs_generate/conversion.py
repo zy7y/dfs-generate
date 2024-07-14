@@ -39,11 +39,13 @@ def _fast_crud_column(column):
     fmt = f"{name}: {{ title: '{title}', type: 'text', search: {{ show: true }}}}"
     return fmt
 
+
 def _antd_crud_column(column):
     name = to_camel(column["COLUMN_NAME"])
     title = column["COLUMN_COMMENT"] or name
     fmt = f"{{ title: '{title}', dataIndex: '{name}', key: '{name}', supportSearch: true}}"
     return fmt
+
 
 class Conversion:
     def __init__(self, table_name, columns, uri):
@@ -83,14 +85,14 @@ class Conversion:
             + 'model_config = {"alias_generator": to_camel, "populate_by_name": True}'
         )
         return (
-            "\n".join(imports)
-            + "\n\n"
-            + RESPONSE_SCHEMA
-            + "\n\n"
-            + head
-            + "\n"
-            + "\n".join(fields)
-            + "\n"
+                "\n".join(imports)
+                + "\n\n"
+                + RESPONSE_SCHEMA
+                + "\n\n"
+                + head
+                + "\n"
+                + "\n".join(fields)
+                + "\n"
         )
 
     def router(self):
@@ -104,7 +106,7 @@ class Conversion:
 
     def vue_crud_ts(self):
         columns = (
-            "{" + ",".join(_fast_crud_column(column) for column in self.columns) + "}"
+                "{" + ",".join(_fast_crud_column(column) for column in self.columns) + "}"
         )
         return VUE_CRUD_TS % columns
 
@@ -118,7 +120,6 @@ class Conversion:
         return REACT_CRUD_TSX % (self.table, columns)
 
     def gencode(self):
-        self.react_crud_tsx()
         return {
             "model.py": self.model(),
             "dao.py": self.dao(),
@@ -189,7 +190,7 @@ def _sqlmodel_field_repr(column, imports):
 
     name = column["COLUMN_NAME"]
     if kwargs.get("default", "") is None and "func.now" not in kwargs.get(
-        "sa_column", ""
+            "sa_column", ""
     ):
         imports.add("from typing import Optional")
         field_type = f"Optional[{_type}]"
@@ -295,12 +296,12 @@ class TortoiseConversion(Conversion):
             if "    " + field not in fields:
                 fields.append("    " + field)
         return (
-            "\n".join(imports)
-            + "\n\n"
-            + head
-            + "\n"
-            + "\n".join(fields)
-            + f"\n{' ' * 4}class Meta:\n{' ' * 8}table='{self.table_name}'"
+                "\n".join(imports)
+                + "\n\n"
+                + head
+                + "\n"
+                + "\n".join(fields)
+                + f"\n{' ' * 4}class Meta:\n{' ' * 8}table='{self.table_name}'"
         )
 
     def dao(self):
